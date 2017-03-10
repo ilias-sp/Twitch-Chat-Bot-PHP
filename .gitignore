@@ -1,4 +1,4 @@
-logs/*
+log/*
 conf/*
 !conf/config.php.TEMPLATE
 
