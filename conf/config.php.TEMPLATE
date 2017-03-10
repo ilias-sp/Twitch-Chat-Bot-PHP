@@ -20,6 +20,9 @@ $config['nickname'] = '';
 // to fill in: abc123
 $config['channel'] = '';
 
+// to configure the Bot to suppress any messages being sent out, set to TRUE:
+$config['listen_only_mode'] = FALSE;
+
 // bot essential commands definition:
 $config['admin_addcommand_keyword'] = '!addcmd';
 $config['admin_removecommand_keyword'] = '!removecmd';

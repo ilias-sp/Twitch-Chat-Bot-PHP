@@ -121,12 +121,21 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    public function send_text_to_server($text)
+    public function send_text_to_server($command_type, $text)
     {
-        $this->_log_irc_traffic('--> | ' . $text);
-        $this->_log_it('DEBUG', __FUNCTION__, '--> | ' . $text);
-        
-        return (fwrite($this->socket, $text . "\r\n") === FALSE) ? FALSE : TRUE;
+        if ($command_type == 'service' ||
+            $this->bot_config['listen_only_mode'] === FALSE)
+        {
+            $this->_log_irc_traffic('--> | ' . $text);
+            $this->_log_it('DEBUG', __FUNCTION__, '--> | ' . $text);
+            //
+            return (fwrite($this->socket, $text . "\r\n") === FALSE) ? FALSE : TRUE;
+        }
+        else
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'Bot on listen_only mode or command not needed for service. Supressing it.');
+            return TRUE;
+        }        
     }
     //----------------------------------------------------------------------------------
     //
@@ -211,7 +220,7 @@ class IzyBot {
         if (preg_match("/PING :(.*)/i", $text, $match)) // PING:
         {
             $this->_log_it('DEBUG', __FUNCTION__, "Requested to PING $match[1]");
-            $this->send_text_to_server("PONG :$match[1]");
+            $this->send_text_to_server('service', "PONG :$match[1]");
         }
         elseif (preg_match("/:(\S+)!\S+@\S+ JOIN (#\S+)/i", $text, $match)) // USER JOINED CHANNEL:
         {
@@ -352,7 +361,7 @@ class IzyBot {
                     if ($this->_check_response_should_be_silenced($command) === FALSE)
                     {
                         $this->_log_it('DEBUG', __FUNCTION__, 'Received command: ' . $command . ', replying it with: ' . $response);
-                        $this->send_text_to_server('PRIVMSG ' . $channel . ' : @' . $username . ' ' . $response);
+                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : @' . $username . ' ' . $response);
                         $this->_add_command_to_bot_responses_last_date($command);
                     }                    
                     return TRUE;
@@ -368,15 +377,15 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     private function _login_to_twitch()
     {
-        $this->send_text_to_server('PASS ' . $this->oath_pass);
+        $this->send_text_to_server('service', 'PASS ' . $this->oath_pass);
         usleep(1000000);
-        $this->send_text_to_server('NICK ' . $this->nickname);
+        $this->send_text_to_server('service', 'NICK ' . $this->nickname);
         usleep(1000000);
-        $this->send_text_to_server('CAP REQ :twitch.tv/membership');
+        $this->send_text_to_server('service', 'CAP REQ :twitch.tv/membership');
         usleep(1000000);
-        // $this->send_text_to_server('CAP REQ :twitch.tv/tags');
-        // usleep(500000);
-        $this->send_text_to_server('JOIN ' . $this->channel);
+        $this->send_text_to_server('service', 'CAP REQ :twitch.tv/commands');
+        usleep(500000);
+        $this->send_text_to_server('service', 'JOIN ' . $this->channel);
         usleep(1000000);
         $this->_log_it('INFO', __FUNCTION__, 'Login commands were sent. Bot is ready.');
         //
@@ -517,7 +526,7 @@ class IzyBot {
         if (array_search($words_in_message_text[1], $this->admin_commands_reserved_names) !== FALSE)
         {
             $this->_log_it('DEBUG', __FUNCTION__, 'attempted admin command addition with keyword: ' . $words_in_message_text[1] . ' failed due to reserved keyword.');
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' could not be added (reserved keyword).');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' could not be added (reserved keyword).');
             return FALSE;
         }
         //
@@ -526,7 +535,7 @@ class IzyBot {
             if ($words_in_message_text[1] == $command)
             {
                 $this->_log_it('DEBUG', __FUNCTION__, 'attempted admin command addition with keyword: ' . $words_in_message_text[1] . ' failed, command already exists.');
-                $this->send_text_to_server('PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' already exists.');
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' already exists.');
                 return FALSE;
             }
         }
@@ -534,7 +543,7 @@ class IzyBot {
         $this->admin_commands[$words_in_message_text[1]] = implode(' ', array_slice($words_in_message_text, 2));
         $this->_log_it('DEBUG', __FUNCTION__, 'admin command set: ' . $words_in_message_text[1] . ', to respond: ' . implode(' ', array_slice($words_in_message_text, 2)));
         $this->_write_admin_commands();
-        $this->send_text_to_server('PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' was added.');
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' was added.');
         //
         return TRUE;
     }
@@ -546,14 +555,14 @@ class IzyBot {
         if (array_search($words_in_message_text[1], $this->admin_usernames) !== FALSE)
         {
             $this->_log_it('DEBUG', __FUNCTION__, 'attempted admin addition with username: ' . $words_in_message_text[1] . ' failed, user is already admin.');
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' is already member of the admins.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' is already member of the admins.');
             RETURN FALSE;
         }
         //
         $this->admin_usernames[] = $words_in_message_text[1];
         $this->_log_it('DEBUG', __FUNCTION__, 'Username: ' . $words_in_message_text[1] . ' was added to the admins.');
         $this->_write_admin_usernames();
-        $this->send_text_to_server('PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' was added to the admins.');
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' was added to the admins.');
         //
         return TRUE;
     }
@@ -567,14 +576,14 @@ class IzyBot {
         if (array_search($periodic_message, $this->periodic_messages) !== FALSE)
         {
             $this->_log_it('DEBUG', __FUNCTION__, 'attempted periodic message addition with text: ' . $periodic_message . ' failed, message already exists.');
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' : This periodic message already exists.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : This periodic message already exists.');
             RETURN FALSE;
         }
         //
         $this->periodic_messages[] = $periodic_message;
         $this->_log_it('DEBUG', __FUNCTION__, 'Periodic message: ' . $periodic_message . ' was added to the periodic_messages.');
         $this->_write_periodic_messages();
-        $this->send_text_to_server('PRIVMSG ' . $channel . ' : Periodic message was added to the list.');
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Periodic message was added to the list.');
         //
         return TRUE;
     }
@@ -591,12 +600,12 @@ class IzyBot {
                 $this->_log_it('DEBUG', __FUNCTION__, 'admin command removed: ' . $words_in_message_text[1]);
 
                 $this->_write_admin_commands();
-                $this->send_text_to_server('PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' was removed.');
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' was removed.');
                 return TRUE;
             }
         }
         //
-        $this->send_text_to_server('PRIVMSG ' . $channel . ' : No such command: ' . $words_in_message_text[1]);
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : No such command: ' . $words_in_message_text[1]);
         //
         return FALSE;
     }
@@ -615,12 +624,12 @@ class IzyBot {
             $this->_log_it('DEBUG', __FUNCTION__, 'Periodic message: ' . $periodic_message . ' was removed.');
 
             $this->_write_periodic_messages();
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' : Periodic message: ' . $periodic_message . ' was removed from the list.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Periodic message: ' . $periodic_message . ' was removed from the list.');
             return TRUE;
         }
         else
         {
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' : Periodic message: ' . $periodic_message . ' was not found in the list.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Periodic message: ' . $periodic_message . ' was not found in the list.');
             return FALSE;
         }
     }
@@ -635,12 +644,12 @@ class IzyBot {
             $this->_log_it('DEBUG', __FUNCTION__, 'Username: ' . $words_in_message_text[1] . ' was removed from the admins.');
 
             $this->_write_admin_usernames();
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' was removed from the admins.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' was removed from the admins.');
             return TRUE;
         }
         else
         {
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' is not member of the admins.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : User ' . $words_in_message_text[1] . ' is not member of the admins.');
             return FALSE;
         }
     }
@@ -658,7 +667,7 @@ class IzyBot {
         //
         if ($this->_check_response_should_be_silenced($this->bot_config['helpcommand_keyword']) === FALSE)
         {
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' :' . $message);
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' :' . $message);
             $this->_add_command_to_bot_responses_last_date($this->bot_config['helpcommand_keyword']);
         }
         //
@@ -674,7 +683,7 @@ class IzyBot {
         //
         if ($this->_check_response_should_be_silenced($this->bot_config['uptimecommand_keyword']) === FALSE)
         {
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' :' . $message);
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' :' . $message);
             $this->_add_command_to_bot_responses_last_date($this->bot_config['uptimecommand_keyword']);
         }
         //
@@ -689,7 +698,7 @@ class IzyBot {
         //
         if ($this->_check_response_should_be_silenced($this->bot_config['botinfocommand_keyword']) === FALSE)
         {
-            $this->send_text_to_server('PRIVMSG ' . $channel . ' :' . $message);
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' :' . $message);
             $this->_add_command_to_bot_responses_last_date($this->bot_config['botinfocommand_keyword']);
         }
         //
@@ -744,7 +753,7 @@ class IzyBot {
                 $this->periodic_messages_last_message_sent_index = 0;
             }
             $periodic_message = $this->periodic_messages[$this->periodic_messages_last_message_sent_index];
-            $this->send_text_to_server('PRIVMSG ' . $this->channel . ' : ' . $periodic_message);
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $periodic_message);
             $this->periodic_messages_last_date_sent = date('U');
         }
         //
