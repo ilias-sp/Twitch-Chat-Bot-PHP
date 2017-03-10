@@ -135,19 +135,30 @@ class IzyBot {
     {
         while (true)
         {
-            $text = fgets($this->socket);
-            if (feof($this->socket)) {
-                $this->_log_it('INFO', __FUNCTION__, 'Detected socket was closed.');
-                goto ENDCONNECTION;
+            $this->_open_socket();
+            $this->_login_to_twitch();
+            //
+            while (true)
+            {
+                $text = fgets($this->socket);
+                if (feof($this->socket)) {
+                    $this->_log_it('INFO', __FUNCTION__, 'Detected socket was closed.');
+                    goto ENDCONNECTION;
+                }
+                //---
+                $this->_log_irc_traffic('<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its NewLine.
+                $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its Newline.
+                $this->_process_irc_incoming_message($text);
+                $this->_check_and_send_periodic_message();
             }
-            //---
-            $this->_log_irc_traffic('<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its NewLine.
-            $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its Newline.
-            $this->_process_irc_incoming_message($text);
-            $this->_check_and_send_periodic_message();
+            //
+            ENDCONNECTION:
+            $this->_close_socket();
+            $this->_log_it('INFO', __FUNCTION__, 'Attempting to reconnect in 5 seconds..');
+            sleep(5);
+            //  
         }
         //
-        ENDCONNECTION:
         return $this;
     }
     //----------------------------------------------------------------------------------
@@ -200,7 +211,7 @@ class IzyBot {
         if (preg_match("/PING :(.*)/i", $text, $match)) // PING:
         {
             $this->_log_it('DEBUG', __FUNCTION__, "Requested to PING $match[1]");
-            $this->send_text_to_server("PONG :$match[1]\r\n");
+            $this->send_text_to_server("PONG :$match[1]");
         }
         elseif (preg_match("/:(\S+)!\S+@\S+ JOIN (#\S+)/i", $text, $match)) // USER JOINED CHANNEL:
         {
@@ -471,8 +482,6 @@ class IzyBot {
         $this->_read_admin_commands();
         $this->_read_admin_usernames();
         $this->_read_periodic_messages();
-        $this->_open_socket();
-        $this->_login_to_twitch();
         //
         return $this;
     }
@@ -481,7 +490,6 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     public function stop_bot()
     {
-        $this->_close_socket();
         $this->_write_admin_commands();
         //
         return $this;
