@@ -25,6 +25,7 @@ To login to IRC, you will need to obtain an Oath token from Twitch API first. Yo
 INSTALLATION:
 
 download the zip from this repository, and extract its contents to a folder.
+to install PHP on Windows, see APPENDIX.
 
 
 CONFIGURATION:
@@ -33,9 +34,11 @@ edit that file and fill in the information required.
 
 
 RUN:
-to start the bot, open cli to the folder of the bot and run:
+to start the bot, open "cmd" to the folder of the bot and run:
 
 php wrapper.php
+
+OR, for Windows users, you can use the supplied batch file 
 
 
 ADMIN COMMANDS:
@@ -58,3 +61,35 @@ special reserved commands that are already configured:
 !uptime: will reply the uptime of the bot. This should not be assumed it is the same as the uptime of the stream (unless you start the bot simultaneously with the stream session).
 
 !botinfo: a command to print information about this bot and where people can find it.
+
+
+APPENDIX:
+Installing PHP on Windows.
+- download the PHP x86 or x64 version according to your system architecture from: http://php.net/downloads.php.
+- extract its contents in a folder under C:, lets say under folder C:\PHP.
+- cp php.ini-production to php.ini.
+- Using a text editor, edit the php.ini file and:
+  1. search for line:
+  ; On windows:
+  ; extension_dir = "ext"
+
+  uncomment the 2nd line, making it look:
+
+  ; On windows:
+  extension_dir = "ext"
+  
+  2. search for line:
+  ; extension=php_mbstring.dll
+
+  uncomment it, making it look:
+
+  extension=php_mbstring.dll
+
+  save the file.
+- add the php binary to the %PATH% env variable:
+
+  right click on "My computer" > Properties > Change Settings > Advanced > Environment Variables.
+  on bottom panel its the System Variables for your Windows account. Locate the "Path" Variable, click Edit and Append in its value: ;C:\PHP; You just made the PHP binary avaiable to be located and executed from any folder of your system.
+  Press OK to save your change, press OK to close the Dialog. You may need to restart your PC for changes to take effect.
+
+- Installation of PHP is done!
