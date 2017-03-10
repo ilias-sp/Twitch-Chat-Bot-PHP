@@ -1,0 +1,45 @@
+<?php
+
+
+// Fill in the name that you want the bot to identify itself in your Twitch Chat.
+$config['bot_name'] = 'IzyBot';
+
+// Twitch authentication requires an oath token for logging in to the IRC chat. You can generate 
+// a token at: https://twitchapps.com/tmi/
+// if you plan to use the Bot under a different username than your personal account, make sure that when you 
+// use the above tool and get redirected to Twitch to authenticate, you provide the dedicated Twitch account for the Bot.
+// please check the README.md for more info.
+$config['oath_pass'] = '';
+
+// Fill in the username associated to the account you used to generate the oath token
+// for the previous step.
+$config['nickname'] = '';
+
+// Fill in the name of the Twitch Channel you want the Bot to connect to. You can use the name you see 
+// in the URL of your stream, for example if your stream is : https://www.twitch.tv/abc123, you need
+// to fill in: abc123
+$config['channel'] = '';
+
+// bot essential commands definition:
+$config['admin_addcommand_keyword'] = '!addcmd';
+$config['admin_removecommand_keyword'] = '!removecmd';
+$config['admin_addadmin_keyword'] = '!addadmin';
+$config['admin_removeadmin_keyword'] = '!removeadmin';
+$config['helpcommand_keyword'] = '!help';
+$config['uptimecommand_keyword'] = '!uptime';
+
+// if you want to suppress Bot responses to same commands for a few seconds, 
+// set the desired thresh in seconds. If you want to disable this feature, set the value to 0 seconds.
+$config['duplicate_message_cuttoff_seconds'] = 20;
+
+// logging information.
+$config['log_file'] = 'IzyBot';
+$config['log_file_irc'] = 'IzyBot_irc';
+
+// set the desired log level according to below table:
+//
+// DEBUG (to see all messages): 3
+// INFO (to see only info and error messages): 2
+// ERROR (to see only error messages): 1
+//
+$config['log_level'] = 'INFO';
