@@ -28,12 +28,19 @@ class IzyBot {
     private $duplicate_message_cuttoff_seconds;
     private $bot_responses_last_date;
 
+    private $periodic_messages_interval_seconds;
+    private $periodic_messages;
+    private $periodic_messages_file;
+    private $periodic_messages_last_message_sent_index;
+    private $periodic_messages_last_date_sent;
+
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
     public function __construct($config)
     {
         $this->start_timestamp = date('U');
+        
         $this->bot_config = $config;
         $this->bot_config['botinfocommand_keyword'] = '!botinfo';
         
@@ -59,15 +66,25 @@ class IzyBot {
                                                      $config['admin_removecommand_keyword'], 
                                                      $config['admin_addadmin_keyword'],
                                                      $config['admin_removeadmin_keyword'],
+                                                     $config['admin_addperiodicmsg_keyword'],
+                                                     $config['admin_removeperiodicmsg_keyword'],
                                                      $config['helpcommand_keyword'],
                                                      $config['uptimecommand_keyword'],
                                                      $this->bot_config['botinfocommand_keyword']
         );
+
         // admins:
         $this->admin_usernames_file = APPPATH . '/conf/admin_usernames.cfg';
         $this->admin_usernames = array();
         $this->admin_usernames[] = $config['nickname'];
 
+        // periodic messages:
+        $this->periodic_messages_last_date_sent = date('U');
+        $this->periodic_messages = array();
+        $this->periodic_messages_file = APPPATH . '/conf/periodic_messages.cfg';
+        $this->periodic_messages_last_message_sent_index = -1;
+        $this->periodic_messages_interval_seconds = $config['periodic_messages_interval_seconds'];
+        //
         $this->duplicate_message_cuttoff_seconds = $config['duplicate_message_cuttoff_seconds'];
         $this->bot_responses_last_date = array();
         $this->_log_it('INFO', __FUNCTION__, $this->bot_name . "\'s initialization is complete!" . "\n");
@@ -127,6 +144,7 @@ class IzyBot {
             $this->_log_irc_traffic('<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its NewLine.
             $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its Newline.
             $this->_process_irc_incoming_message($text);
+            $this->_check_and_send_periodic_message();
         }
         //
         ENDCONNECTION:
@@ -223,7 +241,7 @@ class IzyBot {
                 }
                 else
                 {
-                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin command addition is malformed, command: ' . $message_text . '. Message ignored.');
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin command addition is malformed, command: |' . $message_text . '| was ignored.');
                     return FALSE;
                 }
             }
@@ -236,7 +254,7 @@ class IzyBot {
                 }
                 else
                 {
-                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin command removal is malformed, command: ' . $message_text . '. Message ignored.');
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin command removal is malformed, command: |' . $message_text . '| was ignored.');
                     return FALSE;
                 }
             }
@@ -249,7 +267,7 @@ class IzyBot {
                 }
                 else
                 {
-                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin username addition is malformed, command: ' . $message_text . '. Message ignored.');
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin username addition is malformed, command: |' . $message_text . '| was ignored.');
                     return FALSE;
                 }
             }
@@ -262,10 +280,38 @@ class IzyBot {
                 }
                 else
                 {
-                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin username removal is malformed, command: ' . $message_text . '. Message ignored.');
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin username removal is malformed, command: |' . $message_text . '| was ignored.');
                     return FALSE;
                 }
             }
+            //
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_addperiodicmsg_keyword']) // add periodic message check
+            {
+                if (count($words_in_message_text) > 2)
+                {
+                    $this->_add_periodic_message($username, $channel, $words_in_message_text, $message_text);
+                    return TRUE;
+                }
+                else
+                {
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted periodic message addition is malformed, command: |' . $message_text . '| was ignored.');
+                    return FALSE;
+                }
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_removeperiodicmsg_keyword']) // remove periodic message check
+            {
+                if (count($words_in_message_text) > 2)
+                {
+                    $this->_remove_periodic_message($username, $channel, $words_in_message_text, $message_text);
+                    return TRUE;
+                }
+                else
+                {
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted periodic message removal is malformed, command: |' . $message_text . '| was ignored.');
+                    return FALSE;
+                }
+            }
+            
         }
         //
         // commands for admins END 
@@ -328,25 +374,6 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    public function send_pyramid($emoticon, $usleep_interval)
-    {
-        sleep(4);
-        $this->send_text_to_server('PRIVMSG  ' . $this->channel . ' : ' . $emoticon);
-        usleep($usleep_interval);
-        $this->send_text_to_server('PRIVMSG  ' . $this->channel . ' : ' . $emoticon . ' ' . $emoticon);
-        usleep($usleep_interval);
-        $this->send_text_to_server('PRIVMSG  ' . $this->channel . ' : ' . $emoticon . ' ' . $emoticon . ' ' . $emoticon);
-        usleep($usleep_interval);
-        $this->send_text_to_server('PRIVMSG  ' . $this->channel . ' : ' . $emoticon . ' ' . $emoticon);
-        usleep($usleep_interval);
-        $this->send_text_to_server('PRIVMSG  ' . $this->channel . ' : ' . $emoticon);
-        usleep($usleep_interval);
-        //
-        return $this;
-    }
-    //----------------------------------------------------------------------------------
-    //
-    //----------------------------------------------------------------------------------
     private function _read_admin_commands()
     {
         if (file_exists($this->admin_commands_file))
@@ -384,6 +411,25 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _read_periodic_messages()
+    {
+        if (file_exists($this->periodic_messages_file))
+        {
+            $periodic_messages_text = file_get_contents($this->periodic_messages_file);
+            if ($periodic_messages_text !== FALSE)
+            {
+                $this->periodic_messages = json_decode($periodic_messages_text);
+            }
+        }
+        //
+        $this->periodic_messages = array_unique($this->periodic_messages);
+        $this->_log_it('INFO', __FUNCTION__, 'Bot periodic_messages loaded:' . "\n\n" . print_r($this->periodic_messages, true) . "\n\n");
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _write_admin_commands()
     {
         if (file_put_contents($this->admin_commands_file, json_encode($this->admin_commands)) === FALSE)
@@ -408,10 +454,23 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _write_periodic_messages()
+    {
+        if (file_put_contents($this->periodic_messages_file, json_encode($this->periodic_messages)) === FALSE)
+        {
+            throw new \Exception("Error occured while flushing periodic messages to file: " . $this->periodic_messages_file);
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     public function start_bot()
     {
         $this->_read_admin_commands();
         $this->_read_admin_usernames();
+        $this->_read_periodic_messages();
         $this->_open_socket();
         $this->_login_to_twitch();
         //
@@ -493,6 +552,27 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _add_periodic_message($username, $channel, $words_in_message_text, $message_text)
+    {
+        $periodic_message = implode(' ', array_slice($words_in_message_text, 1));
+        //
+        if (array_search($periodic_message, $this->periodic_messages) !== FALSE)
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'attempted periodic message addition with text: ' . $periodic_message . ' failed, message already exists.');
+            $this->send_text_to_server('PRIVMSG ' . $channel . ' : This periodic message already exists.');
+            RETURN FALSE;
+        }
+        //
+        $this->periodic_messages[] = $periodic_message;
+        $this->_log_it('DEBUG', __FUNCTION__, 'Periodic message: ' . $periodic_message . ' was added to the periodic_messages.');
+        $this->_write_periodic_messages();
+        $this->send_text_to_server('PRIVMSG ' . $channel . ' : Periodic message was added to the list.');
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _remove_admin_command($username, $channel, $words_in_message_text, $message_text)
     {
         foreach ($this->admin_commands as $command => $response)
@@ -511,6 +591,30 @@ class IzyBot {
         $this->send_text_to_server('PRIVMSG ' . $channel . ' : No such command: ' . $words_in_message_text[1]);
         //
         return FALSE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _remove_periodic_message($username, $channel, $words_in_message_text, $message_text)
+    {
+        $periodic_message = implode(' ', array_slice($words_in_message_text, 1));
+        //        
+        if (array_search($periodic_message, $this->periodic_messages) !== FALSE)
+        {
+            unset($this->periodic_messages[array_search($periodic_message, $this->periodic_messages)]);
+            // reset the last sent index:
+            $this->periodic_messages_last_message_sent_index = -1;
+            $this->_log_it('DEBUG', __FUNCTION__, 'Periodic message: ' . $periodic_message . ' was removed.');
+
+            $this->_write_periodic_messages();
+            $this->send_text_to_server('PRIVMSG ' . $channel . ' : Periodic message: ' . $periodic_message . ' was removed from the list.');
+            return TRUE;
+        }
+        else
+        {
+            $this->send_text_to_server('PRIVMSG ' . $channel . ' : Periodic message: ' . $periodic_message . ' was not found in the list.');
+            return FALSE;
+        }
     }
     //----------------------------------------------------------------------------------
     //
@@ -617,7 +721,27 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-
+    private function _check_and_send_periodic_message()
+    {
+        if ($this->periodic_messages_interval_seconds > 0 && 
+            date('U') - $this->periodic_messages_last_date_sent > $this->periodic_messages_interval_seconds &&
+            count($this->periodic_messages) > 0
+            )
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'Time to send a periodic message.');
+            // select next periodic message from the array:
+            $this->periodic_messages_last_message_sent_index++;
+            if ($this->periodic_messages_last_message_sent_index > (count($this->periodic_messages) - 1))
+            {
+                $this->periodic_messages_last_message_sent_index = 0;
+            }
+            $periodic_message = $this->periodic_messages[$this->periodic_messages_last_message_sent_index];
+            $this->send_text_to_server('PRIVMSG ' . $this->channel . ' : ' . $periodic_message);
+            $this->periodic_messages_last_date_sent = date('U');
+        }
+        //
+        return TRUE;
+    }
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
