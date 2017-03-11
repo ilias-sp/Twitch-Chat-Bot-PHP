@@ -384,9 +384,8 @@ class IzyBot {
         $this->send_text_to_server('service', 'CAP REQ :twitch.tv/membership');
         usleep(1000000);
         $this->send_text_to_server('service', 'CAP REQ :twitch.tv/commands');
-        usleep(500000);
-        $this->send_text_to_server('service', 'JOIN ' . $this->channel);
         usleep(1000000);
+        $this->send_text_to_server('service', 'JOIN ' . $this->channel);
         $this->_log_it('INFO', __FUNCTION__, 'Login commands were sent. Bot is ready.');
         //
         return TRUE;
