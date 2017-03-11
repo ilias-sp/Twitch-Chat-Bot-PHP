@@ -87,7 +87,7 @@ class IzyBot {
         //
         $this->duplicate_message_cuttoff_seconds = $config['duplicate_message_cuttoff_seconds'];
         $this->bot_responses_last_date = array();
-        $this->_log_it('INFO', __FUNCTION__, $this->bot_name . "\'s initialization is complete!" . "\n");
+        $this->_log_it('INFO', __FUNCTION__, $this->bot_name . "'s initialization is complete!" . "\n");
     }
     //----------------------------------------------------------------------------------
     //
