@@ -47,6 +47,8 @@ Unless, you have defined otherwise in the wrapper.php, the bot supports the belo
 
 !addcmd: used to add a new command. the command will be available to all.
 
+!editcmd: used to update the response of an existing command.
+
 !removecmd: used to remove an existing command.
 
 !addadmin: used to add a new username to the admin group. This admin group is not necessarily the same with the Mods. if you want to make a person a Mod to your channel, you will have to explicitly add him to the Bots admin group.

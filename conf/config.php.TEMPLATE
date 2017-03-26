@@ -25,6 +25,7 @@ $config['listen_only_mode'] = FALSE;
 
 // bot essential commands definition:
 $config['admin_addcommand_keyword'] = '!addcmd';
+$config['admin_editcommand_keyword'] = '!editcmd';
 $config['admin_removecommand_keyword'] = '!removecmd';
 $config['admin_addadmin_keyword'] = '!addadmin';
 $config['admin_removeadmin_keyword'] = '!removeadmin';

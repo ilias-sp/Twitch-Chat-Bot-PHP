@@ -63,6 +63,7 @@ class IzyBot {
         $this->admin_commands_file = APPPATH . '/conf/admin_commands.cfg';
         $this->admin_commands = array();
         $this->admin_commands_reserved_names = array($config['admin_addcommand_keyword'],
+                                                     $config['admin_editcommand_keyword'], 
                                                      $config['admin_removecommand_keyword'], 
                                                      $config['admin_addadmin_keyword'],
                                                      $config['admin_removeadmin_keyword'],
@@ -262,6 +263,19 @@ class IzyBot {
                 else
                 {
                     $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin command addition is malformed, command: |' . $message_text . '| was ignored.');
+                    return FALSE;
+                }
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_editcommand_keyword']) // edit admin command check
+            {
+                if (count($words_in_message_text) >= 3)
+                {
+                    $this->_edit_admin_command($username, $channel, $words_in_message_text, $message_text);
+                    return TRUE;
+                }
+                else
+                {
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted admin command edit is malformed, command: |' . $message_text . '| was ignored.');
                     return FALSE;
                 }
             }
@@ -585,6 +599,28 @@ class IzyBot {
         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Periodic message was added to the list.');
         //
         return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _edit_admin_command($username, $channel, $words_in_message_text, $message_text)
+    {
+        foreach ($this->admin_commands as $command => $response)
+        {
+            if ($words_in_message_text[1] == $command)
+            {
+                $this->admin_commands[$words_in_message_text[1]] = implode(' ', array_slice($words_in_message_text, 2));
+                $this->_log_it('DEBUG', __FUNCTION__, 'admin command updated: ' . $words_in_message_text[1]);
+
+                $this->_write_admin_commands();
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' was updated.');
+                return TRUE;
+            }
+        }
+        //
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : No such command: ' . $words_in_message_text[1]);
+        //
+        return FALSE;
     }
     //----------------------------------------------------------------------------------
     //
