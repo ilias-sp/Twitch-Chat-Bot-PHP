@@ -11,6 +11,7 @@ Izybot is a basic Twitch Chat bot, to help make streamers life easier. It will a
 - bot's commands management via Twitch Chat. Bot commands are special keywords users type in chat, and bot replies with admin's configured response.
 - response suppression for confirable interval if same command was replied earlier.
 - periodic messages initiated by the bot. Can be used to promote streamer's social media etc. (Please note that although the periodic messages are initiated by the bot, they still have to be triggered by some activity in the IRC traffic of the channel. This can cause some delay when the channel has not much chat activity, up to 1 minute.)
+- Polls. create poll for the viewers and bot will count their votes.
 
 On the other hand, Bot was not written to be performing Moderator tasks, at least not yet :)
 
@@ -31,7 +32,7 @@ to install PHP on Windows, see APPENDIX.
 
 # CONFIGURATION:
 go to conf directory and copy the config.php.TEMPLATE file to a new file called: config.php
-edit that file and fill in the information required.
+edit that file and fill in the information required. edit the fields according to the instructions.
 
 
 # RUN:
@@ -58,6 +59,10 @@ Unless, you have defined otherwise in the wrapper.php, the bot supports the belo
 !addperiodicmsg: used to add some message to periodically sent out in the chat.
 
 !removeperiodicmsg: used to remove a message from the list of messages periodically sent out in the chat. You need to type the whole sentence that you want to remove, exactly as  is when you see it in chat.
+
+!makepoll: used to create a new poll. Command syntax is expected to be: !makepoll <poll duration in seconds> <free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)>
+
+!cancelpoll: used to cancel the active poll.
 
 
 # USER COMMANDS:

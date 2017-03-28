@@ -1,4 +1,5 @@
-log/*
 conf/*
 !conf/config.php.TEMPLATE
 
+log/*
+polls/*

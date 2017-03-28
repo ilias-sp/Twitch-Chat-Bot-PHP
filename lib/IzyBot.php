@@ -34,6 +34,14 @@ class IzyBot {
     private $periodic_messages_last_message_sent_index;
     private $periodic_messages_last_date_sent;
 
+
+    // poll stuff:
+    private $poll_question;
+    private $active_poll_exists;
+    private $votes_array;
+    private $poll_deadline_timestamp;
+    private $poll_duration;
+
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
@@ -71,6 +79,8 @@ class IzyBot {
                                                      $config['admin_removeperiodicmsg_keyword'],
                                                      $config['helpcommand_keyword'],
                                                      $config['uptimecommand_keyword'],
+                                                     $config['admin_makepoll_keyword'],
+                                                     $config['admin_cancelpoll_keyword'],
                                                      $this->bot_config['botinfocommand_keyword']
         );
 
@@ -85,9 +95,17 @@ class IzyBot {
         $this->periodic_messages_file = APPPATH . '/conf/periodic_messages.cfg';
         $this->periodic_messages_last_message_sent_index = -1;
         $this->periodic_messages_interval_seconds = $config['periodic_messages_interval_seconds'];
+        
         //
         $this->duplicate_message_cuttoff_seconds = $config['duplicate_message_cuttoff_seconds'];
         $this->bot_responses_last_date = array();
+
+        // poll stuff:
+        $this->active_poll_exists = FALSE;
+        $this->votes_array = array();
+        $this->poll_help_message = $config['poll_help_message'];
+        
+        //
         $this->_log_it('INFO', __FUNCTION__, $this->bot_name . "'s initialization is complete!" . "\n");
     }
     //----------------------------------------------------------------------------------
@@ -160,6 +178,10 @@ class IzyBot {
                 $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its Newline.
                 $this->_process_irc_incoming_message($text);
                 $this->_check_and_send_periodic_message();
+                if ($this->active_poll_exists === TRUE)
+                {
+                    $this->_monitor_ongoing_poll();
+                }
             }
             //
             ENDCONNECTION:
@@ -345,7 +367,32 @@ class IzyBot {
                     return FALSE;
                 }
             }
-            
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_makepoll_keyword']) // make poll check
+            {
+                if (count($words_in_message_text) > 2)
+                {
+                    $this->_create_poll($username, $channel, $words_in_message_text, $message_text);
+                    return TRUE;
+                }
+                else
+                {
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted poll creation command is malformed, command: |' . $message_text . '| was ignored.');
+                    return FALSE;
+                }
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_cancelpoll_keyword']) // cancel poll check
+            {
+                if (count($words_in_message_text) === 1)
+                {
+                    $this->_cancel_poll($username, $channel, $words_in_message_text, $message_text);
+                    return TRUE;
+                }
+                else
+                {
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Attempted poll cancellation command is malformed, command: |' . $message_text . '| was ignored.');
+                    return FALSE;
+                }
+            }
         }
         //
         // commands for admins END 
@@ -364,6 +411,12 @@ class IzyBot {
         elseif ($message_text === $this->bot_config['botinfocommand_keyword'])
         {
             $this->_display_botinfo_command($username, $channel, $words_in_message_text, $message_text);
+            return TRUE;
+        }
+        elseif ($words_in_message_text[0] === $this->bot_config['votecommand_keyword'] &&
+                $this->active_poll_exists === TRUE)
+        {
+            $this->_register_users_vote($username, $channel, $words_in_message_text, $message_text);
             return TRUE;
         }
         if (count($this->admin_commands) > 0)
@@ -790,6 +843,177 @@ class IzyBot {
             $periodic_message = $this->periodic_messages[$this->periodic_messages_last_message_sent_index];
             $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $periodic_message);
             $this->periodic_messages_last_date_sent = date('U');
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _create_poll($username, $channel, $words_in_message_text, $message_text)
+    {
+        if ($this->active_poll_exists === TRUE)
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'There is an active poll already, ending in ' . ($this->poll_deadline_timestamp - date('U')) . ' seconds.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : There is an active poll already, ending in ' . ($this->poll_deadline_timestamp - date('U')) . ' seconds.');
+            return FALSE;
+        }
+        else
+        {
+            if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) === 1)
+            {
+                $this->_log_it('DEBUG', __FUNCTION__, 'Poll command was valid and no poll already exists. Creating New poll..');
+                $this->active_poll_exists = TRUE;
+                $this->poll_question = implode(' ', array_slice($words_in_message_text, 2));
+                $this->votes_array = array();
+                $this->poll_deadline_timestamp = date('U') + $words_in_message_text[1];
+
+                $this->poll_duration = $words_in_message_text[1];
+                //
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['new_poll_announcement_message'] . ' for the next ' . $this->poll_duration . ' seconds: ' . $this->poll_question);
+                return TRUE;
+            }
+            else
+            {
+                $this->_log_it('ERROR', __FUNCTION__, 'Invalid poll duration: ' . $words_in_message_text[1]);
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Invalid poll duration: ' . $words_in_message_text[1]);
+                return FALSE;
+            }
+            
+
+        }
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _cancel_poll($username, $channel, $words_in_message_text, $message_text)
+    {
+        if ($this->active_poll_exists === FALSE)
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'There is no active poll at the moment.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : There is no active poll at the moment.');
+            return FALSE;
+        }
+        else
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'Poll cancellation command was valid. Cancelling current poll..');
+            $this->active_poll_exists = FALSE;
+            
+            // no need to write poll results to file..
+
+            $this->poll_question = NULL;
+            $this->votes_array = array();
+            $this->poll_deadline_timestamp = NULL;
+
+            $this->poll_duration = NULL;
+            //
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Poll was cancelled.');
+            return TRUE;
+        }
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _register_users_vote($username, $channel, $words_in_message_text, $message_text)
+    {
+        if (count($words_in_message_text) !== 2)
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'Vote command is malformed. Command: ' . $message_text);
+            return FALSE;
+        }
+        else
+        {
+            if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) === 1 &&
+                strlen($words_in_message_text[1]) <= 5
+                )
+            {
+                $this->_log_it('DEBUG', __FUNCTION__, 'Vote command is accepted. Command: ' . $message_text);
+                $this->votes_array[$username] = $words_in_message_text[1];
+                return TRUE;
+            }
+            else
+            {
+                $this->_log_it('DEBUG', __FUNCTION__, 'Vote command is malformed and rejected. Command: ' . $message_text);
+                return FALSE;
+            }
+        }
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _monitor_ongoing_poll()
+    {
+        if ($this->poll_deadline_timestamp <= date('U'))
+        {
+            $this->_log_it('DEBUG', __FUNCTION__, 'Poll deadline date was reached. Closing current poll..');
+            $this->active_poll_exists = FALSE;
+            
+            $poll_results = array();
+            $votes_count = count($this->votes_array);
+            //
+            foreach ($this->votes_array as $user => $vote)
+            {
+                if (isset($poll_results[$vote]))
+                {
+                    $poll_results[$vote]++;
+                }
+                else
+                {
+                    $poll_results[$vote] = 1;
+                }
+            }
+            //
+            $results_text = 'Total votes: ' . $votes_count . '. ';
+            //
+            if ($votes_count > 0)
+            {
+                // sort in descending order first
+                arsort($poll_results);
+                //
+                $current_row = 0;
+                foreach ($poll_results as $poll_result => $poll_count)
+                {
+                    $vote_text = ($poll_count === 1) ? 'vote' : 'votes';
+                    
+                    if ($current_row === 0)
+                    {
+                        $results_text .= ' option ' . $poll_result . ': ' . $poll_count . ' ' . $vote_text . ' (' . intval((100*$poll_count)/$votes_count) . '%) ';
+                    }
+                    else
+                    {
+                        $results_text .= ', option ' . $poll_result . ': ' . $poll_count . ' ' . $vote_text . ' (' . intval((100*$poll_count)/$votes_count) . '%) ';
+                    }
+                    $current_row++;
+                }
+            }
+            // write poll results to file:
+            $this->_write_poll_results($poll_results, $results_text);
+            $this->poll_question = NULL;
+            $this->votes_array = array();
+            $this->poll_deadline_timestamp = NULL;
+
+            $this->poll_duration = NULL;
+            //
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['poll_closure_announcement_message'] . ' The results are: ' . $results_text);
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _write_poll_results($poll_results_array, $results_text)
+    {
+        $poll_results_file = APPPATH . '/polls/Poll_results' . '__' . date('Ymd_H_i') . '.txt';
+        //
+        $text_to_file = "Poll description: " . $this->poll_question . "\n\n" . 
+        "Poll result: " . $results_text . "\n\n" . 
+        "Votes: " . "\n\n" . json_encode($this->votes_array) . "\n\n";        
+        //
+
+        if (file_put_contents($poll_results_file, $text_to_file) === FALSE)
+        {
+            throw new \Exception("Error occured while flushing poll results to file: " . $poll_results_file);
         }
         //
         return TRUE;
