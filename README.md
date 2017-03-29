@@ -15,7 +15,10 @@ Izybot is a basic Twitch Chat bot, to help make streamers life easier. It will a
 
 On the other hand, Bot was not written to be performing Moderator tasks, at least not yet :)
 
+
 # FAQ:
+
+
 
 # PREREQUISITES:
 PHP will be needed on your environment.
@@ -33,6 +36,7 @@ to install PHP on Windows, see APPENDIX.
 # CONFIGURATION:
 go to conf directory and copy the config.php.TEMPLATE file to a new file called: config.php
 edit that file and fill in the information required. edit the fields according to the instructions.
+Repeat with the channel_credentials.php.TEMPLATE file: copy it to channel_credentials.php and fill in your channel/username and oath token (obtained from the https://twitchapps.com/tmi/ site)
 
 
 # RUN:

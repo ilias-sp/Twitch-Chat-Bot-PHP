@@ -819,7 +819,6 @@ class IzyBot {
     private function _add_command_to_bot_responses_last_date($command)
     {
         $this->bot_responses_last_date[$command] = date('U');
-        $this->_log_it('DEBUG', __FUNCTION__, 'this->bot_responses_last_date:' . "\n\n" . print_r($this->bot_responses_last_date, true) . "\n\n");
         //
         return TRUE;
     }

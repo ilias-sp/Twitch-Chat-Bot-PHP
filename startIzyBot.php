@@ -7,6 +7,7 @@ define('INFO', 2);
 define('DEBUG', 3);
 
 require_once(APPPATH . '/conf/config.php');
+require_once(APPPATH . '/conf/channel_credentials.php');
 require_once(APPPATH . '/lib/Common.php');
 require_once(APPPATH . '/lib/IzyBot.php');
 
