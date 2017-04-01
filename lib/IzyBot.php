@@ -194,7 +194,7 @@ class IzyBot {
             {
                 $text = $this->_read_from_socket();
 
-                if (socket_last_error($this->socket) === 104)
+                if (socket_last_error() === 104)
                 {
                     $this->_log_it('INFO', __FUNCTION__, 'Detected socket was closed.');
                     goto ENDCONNECTION;
