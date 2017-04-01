@@ -113,16 +113,21 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     private function _open_socket()
     {
-        $this->socket = fsockopen($this->hostname, $this->port, $errno, $errstr);
+        // $this->socket = fsockopen($this->hostname, $this->port, $errno, $errstr);
+        $this->socket = socket_create(AF_INET, SOCK_STREAM, 0);
+
+        socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        socket_clear_error($this->socket);
         
-        if (! $this->socket)
+        if (socket_connect($this->socket, $this->hostname, $this->port) === FALSE)
         {
             $this->_log_it('ERROR', __FUNCTION__, 'Could not open socket: ' . $this->hostname . ', port: ' . $this->port);
-            $this->_log_it('ERROR', __FUNCTION__, 'Errno: ' . $errno . ', Errstr: ' . $errstr);
-            throw new \Exception('Could not open socket: ' . $this->hostname . ', port: ' . $this->port);
+            // $this->_log_it('ERROR', __FUNCTION__, 'Errno: ' . $errno . ', Errstr: ' . $errstr);
+            throw new \Exception('Could not open socket: ' . $this->hostname . ', port: ' . $this->port . ', error: ' . socket_last_error($this->socket));
         }
         else
         {
+            socket_set_nonblock($this->socket);
             $this->_log_it('INFO', __FUNCTION__, 'Opened socket successfully to server: ' . $this->hostname . ', port: ' . $this->port . '.');
             return TRUE;
         }
@@ -132,7 +137,7 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     private function _close_socket()
     {
-        fclose($this->socket);
+        socket_close($this->socket);
         $this->_log_it('INFO', __FUNCTION__, 'Socket closed.');
         //
         return TRUE;
@@ -148,7 +153,7 @@ class IzyBot {
             $this->_log_irc_traffic('--> | ' . $text);
             $this->_log_it('DEBUG', __FUNCTION__, '--> | ' . $text);
             //
-            return (fwrite($this->socket, $text . "\r\n") === FALSE) ? FALSE : TRUE;
+            return (socket_write($this->socket, $text . "\r\n") === FALSE) ? FALSE : TRUE;
         }
         else
         {
@@ -159,29 +164,59 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _read_from_socket($raw = '')
+    {
+            $response = @socket_read($this->socket, 1024);
+
+            if ($response === FALSE) {
+                return FALSE;
+            } else if (strlen($response) === 0) {
+                return $raw;
+            }
+
+            if (strlen($response) === 1024) {
+                return $this->read($raw . $response);
+            } else {
+                return $raw . $response;
+            }
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     public function main()
     {
-        while (true)
+        while (TRUE)
         {
             $this->_open_socket();
             $this->_login_to_twitch();
             //
-            while (true)
+            while (TRUE)
             {
-                $text = fgets($this->socket);
-                if (feof($this->socket)) {
+                $text = $this->_read_from_socket();
+
+                if (socket_last_error($this->socket) === 104)
+                {
                     $this->_log_it('INFO', __FUNCTION__, 'Detected socket was closed.');
                     goto ENDCONNECTION;
                 }
                 //---
+                if ($text === FALSE)
+                {
+                    GOTO NOMESSAGE;
+                }
+
+                //---
                 $this->_log_irc_traffic('<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its NewLine.
                 $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its Newline.
                 $this->_process_irc_incoming_message($text);
+                //
+                NOMESSAGE:
                 $this->_check_and_send_periodic_message();
                 if ($this->active_poll_exists === TRUE)
                 {
                     $this->_monitor_ongoing_poll();
                 }
+                sleep(1);
             }
             //
             ENDCONNECTION:
