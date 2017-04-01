@@ -175,7 +175,7 @@ class IzyBot {
             }
 
             if (strlen($response) === 1024) {
-                return $this->read($raw . $response);
+                return $this->_read_from_socket($raw . $response);
             } else {
                 return $raw . $response;
             }
