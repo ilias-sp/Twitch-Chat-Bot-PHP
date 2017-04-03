@@ -204,11 +204,16 @@ class IzyBot {
                 {
                     GOTO NOMESSAGE;
                 }
-
                 //---
-                $this->_log_irc_traffic('<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its NewLine.
-                $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($text, 0, mb_strlen($text) - 1)); // delete last char, its Newline.
-                $this->_process_irc_incoming_message($text);
+                // process line by line:
+                $text_lines = explode("\n", $text);
+                foreach ($text_lines as $line)
+                {
+                    $this->_log_irc_traffic('<-- | ' . mb_substr($line, 0, mb_strlen($line) - 1)); // delete last char, its NewLine.
+                    $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($line, 0, mb_strlen($line) - 1)); // delete last char, its Newline.
+                    $this->_process_irc_incoming_message($line);
+                }
+                //---
                 //
                 NOMESSAGE:
                 $this->_check_and_send_periodic_message();
