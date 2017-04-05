@@ -16,19 +16,25 @@ $config['helpcommand_keyword'] = '!help';
 $config['uptimecommand_keyword'] = '!uptime';
 
 
+// reply format:
+// set to
+// 1: to reply to users command with @<username>
+// 2: to reply to users command with <username>
+// 3: to reply to users command without reference to the user who triggered it.
+$config['reply_format'] = 3;
+
+
 // periodic messages:
 $config['admin_addperiodicmsg_keyword'] = '!addperiodicmsg';
 $config['admin_removeperiodicmsg_keyword'] = '!removeperiodicmsg';
+
+// to enable the feature, set the threshold to a value greater than 0 seconds:
+$config['periodic_messages_interval_seconds'] = 60;
 
 
 // if you want to suppress Bot responses to same commands for a few seconds, 
 // set the desired thresh in seconds. If you want to disable this feature, set the value to 0 seconds.
 $config['duplicate_message_cuttoff_seconds'] = 20;
-
-
-// periodic messages:
-// to enable the feature, set the threshold to a value greater than 0 seconds:
-$config['periodic_messages_interval_seconds'] = 60;
 
 
 // logging information:

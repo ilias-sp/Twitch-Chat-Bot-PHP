@@ -468,7 +468,20 @@ class IzyBot {
                     if ($this->_check_response_should_be_silenced($command) === FALSE)
                     {
                         $this->_log_it('DEBUG', __FUNCTION__, 'Received command: ' . $command . ', replying it with: ' . $response);
-                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : @' . $username . ' ' . $response);
+                        //
+                        if ($this->bot_config['reply_format'] === 1)
+                        {
+                            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : @' . $username . ' ' . $response);
+                        }
+                        elseif ($this->bot_config['reply_format'] === 2)
+                        {
+                            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $username . ' ' . $response);
+                        }
+                        elseif ($this->bot_config['reply_format'] === 3)
+                        {
+                            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $response);
+                        }
+                        //                       
                         $this->_add_command_to_bot_responses_last_date($command);
                     }                    
                     return TRUE;
