@@ -627,6 +627,11 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     private function _check_user_is_admin($username)
     {
+        if (mb_strtolower($username) === mb_strtolower($this->bot_config['channel']))
+        {
+            return TRUE;
+        }
+        //
         foreach ($this->admin_usernames as $admin_username)
         {
             if (mb_strtolower($admin_username) === mb_strtolower($username))
