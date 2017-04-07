@@ -629,7 +629,7 @@ class IzyBot {
     {
         foreach ($this->admin_usernames as $admin_username)
         {
-            if ($admin_username === $username)
+            if (mb_strtolower($admin_username) === mb_strtolower($username))
             {
                 return TRUE;
             }
