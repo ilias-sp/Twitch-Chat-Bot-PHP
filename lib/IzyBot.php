@@ -18,8 +18,10 @@ class IzyBot {
     private $log_level;
 
     private $admin_commands;
+    private $admin_commands_nonsafe;
     private $admin_commands_reserved_names;
     private $admin_commands_file;
+    private $admin_commands_nonsafe_file;
     private $admin_usernames;
     private $admin_usernames_file;
 
@@ -69,7 +71,9 @@ class IzyBot {
         
         // admin commands:
         $this->admin_commands_file = APPPATH . '/conf/admin_commands.cfg';
+        $this->admin_commands_nonsafe_file = APPPATH . '/conf/admin_commands_nonsafe.cfg';
         $this->admin_commands = array();
+        $this->admin_commands_nonsafe = array();
         $this->admin_commands_reserved_names = array($config['admin_addcommand_keyword'],
                                                      $config['admin_editcommand_keyword'], 
                                                      $config['admin_removecommand_keyword'], 
@@ -116,7 +120,11 @@ class IzyBot {
         // $this->socket = fsockopen($this->hostname, $this->port, $errno, $errstr);
         $this->socket = socket_create(AF_INET, SOCK_STREAM, 0);
 
-        socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        // dont use below, twitch IRC has multiple servers, we dont want to connect to the one we had before:
+        // if (!socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1))
+        // {
+        //     $this->_log_it('ERROR', __FUNCTION__, 'Unable to set option on socket: ' . socket_strerror(socket_last_error($this->socket)));
+        // }
         socket_clear_error($this->socket);
         
         if (socket_connect($this->socket, $this->hostname, $this->port) === FALSE)
@@ -139,6 +147,8 @@ class IzyBot {
     {
         socket_close($this->socket);
         $this->_log_it('INFO', __FUNCTION__, 'Socket closed.');
+        //
+        // unset($this->socket);
         //
         return TRUE;
     }
@@ -166,17 +176,26 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     private function _read_from_socket($raw = '')
     {
-            $response = @socket_read($this->socket, 1024);
+            $response = socket_read($this->socket, 1024);
+            $this->_log_it('DEBUG', __FUNCTION__, 'After socket_read, error=|' . print_r(socket_last_error($this->socket), true) . '|' . print_r(socket_strerror(socket_last_error($this->socket)), true) . '| mb_strlen=|' . mb_strlen($response) . '|, strlen=|' . strlen($response) . '|');
 
-            if ($response === FALSE) {
+            // it needs strlen and not mb_strlen below:
+            //
+            if ($response === FALSE)
+            {
                 return FALSE;
-            } else if (strlen($response) === 0) {
+            }
+            else if (strlen($response) === 0)
+            {
                 return $raw;
             }
-
-            if (strlen($response) === 1024) {
+            //
+            if (strlen($response) === 1024)
+            {
                 return $this->_read_from_socket($raw . $response);
-            } else {
+            }
+            else
+            {
                 return $raw . $response;
             }
     }
@@ -188,15 +207,16 @@ class IzyBot {
         while (TRUE)
         {
             $this->_open_socket();
+            sleep(2);
             $this->_login_to_twitch();
             //
             while (TRUE)
             {
                 $text = $this->_read_from_socket();
 
-                if (socket_last_error() === 104)
+                if (socket_last_error($this->socket) === 104)
                 {
-                    $this->_log_it('INFO', __FUNCTION__, 'Detected socket was closed.');
+                    $this->_log_it('ERROR', __FUNCTION__, 'Detected socket was closed, error=|' . socket_strerror(socket_last_error($this->socket)));
                     goto ENDCONNECTION;
                 }
                 //---
@@ -204,16 +224,20 @@ class IzyBot {
                 {
                     GOTO NOMESSAGE;
                 }
-                //---
+                //-------------------
                 // process line by line:
-                $text_lines = explode("\n", $text);
+                $text_lines = explode("\r\n", $text);
+
                 foreach ($text_lines as $line)
                 {
-                    $this->_log_irc_traffic('<-- | ' . mb_substr($line, 0, mb_strlen($line) - 1)); // delete last char, its NewLine.
-                    $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . mb_substr($line, 0, mb_strlen($line) - 1)); // delete last char, its Newline.
-                    $this->_process_irc_incoming_message($line);
+                    if (mb_strlen($line) > 0)
+                    {
+                        $this->_log_irc_traffic('<-- | ' . $line); // delete last char, its NewLine.
+                        $this->_log_it('DEBUG', __FUNCTION__, '<-- | ' . $line); // delete last char, its Newline.
+                        $this->_process_irc_incoming_message($line);
+                    }                    
                 }
-                //---
+                //-------------------
                 //
                 NOMESSAGE:
                 $this->_check_and_send_periodic_message();
@@ -226,8 +250,8 @@ class IzyBot {
             //
             ENDCONNECTION:
             $this->_close_socket();
-            $this->_log_it('INFO', __FUNCTION__, 'Attempting to reconnect in 5 seconds..');
-            sleep(5);
+            $this->_log_it('INFO', __FUNCTION__, 'Attempting to reconnect in 15 seconds..');
+            sleep(15);
             //  
         }
         //
@@ -242,7 +266,7 @@ class IzyBot {
         //INFO  - 2
         //DEBUG - 3
 
-        $log_message = date('d/m/Y H:i:s') . ' - ' . $level . ' - ' . $caller_function . ' - ' . $message . "\r\n";
+        $log_message = $this->_getTimestamp() . ' - ' . $level . ' - ' . $caller_function . ' - ' . $message . "\r\n";
 
         if (constant($level) <= constant($this->log_level))
         {
@@ -262,9 +286,20 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _getTimestamp()
+    {
+        $originalTime = microtime(true);
+        $micro = sprintf("%06d", ($originalTime - floor($originalTime)) * 1000000);
+        $date = new DateTime(date('Y-m-d H:i:s.'.$micro, $originalTime));
+
+        return $date->format('Y-m-d G:i:s.u');
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _log_irc_traffic($message)
     {
-        $log_message = date('d/m/Y H:i:s') . ' - ' . $message . "\r\n";
+        $log_message = $this->_getTimestamp() . ' - ' . $message . "\r\n";
         if (mb_strlen($this->log_file_irc) > 0)
         {
             if (file_put_contents($this->log_file_irc, $log_message, FILE_APPEND | LOCK_EX) === FALSE)
@@ -459,33 +494,60 @@ class IzyBot {
             $this->_register_users_vote($username, $channel, $words_in_message_text, $message_text);
             return TRUE;
         }
-        if (count($this->admin_commands) > 0)
+        //
+        foreach ($this->admin_commands_nonsafe as $command => $html_code)
         {
-            foreach ($this->admin_commands as $command => $response)
+            if ($words_in_message_text[0] == $command)
             {
-                if ($words_in_message_text[0] == $command)
+                if ($this->_check_response_should_be_silenced($command) === FALSE)
                 {
-                    if ($this->_check_response_should_be_silenced($command) === FALSE)
+                    $response = $this->_run_eval_text($html_code);
+                    //
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Received command (nonsafe): ' . $command . ', replying it with: ' . $response);
+                    //
+                    if ($this->bot_config['reply_format'] === 1)
                     {
-                        $this->_log_it('DEBUG', __FUNCTION__, 'Received command: ' . $command . ', replying it with: ' . $response);
-                        //
-                        if ($this->bot_config['reply_format'] === 1)
-                        {
-                            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : @' . $username . ' ' . $response);
-                        }
-                        elseif ($this->bot_config['reply_format'] === 2)
-                        {
-                            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $username . ' ' . $response);
-                        }
-                        elseif ($this->bot_config['reply_format'] === 3)
-                        {
-                            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $response);
-                        }
-                        //                       
-                        $this->_add_command_to_bot_responses_last_date($command);
-                    }                    
-                    return TRUE;
-                }
+                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : @' . $username . ' ' . $response);
+                    }
+                    elseif ($this->bot_config['reply_format'] === 2)
+                    {
+                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $username . ' ' . $response);
+                    }
+                    elseif ($this->bot_config['reply_format'] === 3)
+                    {
+                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $response);
+                    }
+                    //                       
+                    $this->_add_command_to_bot_responses_last_date($command);
+                }                    
+                return TRUE;
+            }
+        }
+        //
+        foreach ($this->admin_commands as $command => $response)
+        {
+            if ($words_in_message_text[0] == $command)
+            {
+                if ($this->_check_response_should_be_silenced($command) === FALSE)
+                {
+                    $this->_log_it('DEBUG', __FUNCTION__, 'Received command: ' . $command . ', replying it with: ' . $response);
+                    //
+                    if ($this->bot_config['reply_format'] === 1)
+                    {
+                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : @' . $username . ' ' . $response);
+                    }
+                    elseif ($this->bot_config['reply_format'] === 2)
+                    {
+                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $username . ' ' . $response);
+                    }
+                    elseif ($this->bot_config['reply_format'] === 3)
+                    {
+                        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $response);
+                    }
+                    //                       
+                    $this->_add_command_to_bot_responses_last_date($command);
+                }                    
+                return TRUE;
             }
         }
         //
@@ -521,10 +583,31 @@ class IzyBot {
             if ($admin_commands_text !== FALSE)
             {
                 $this->admin_commands = json_decode($admin_commands_text, true);
+                if (!is_array($this->admin_commands))
+                {
+                    $this->_log_it('ERROR', __FUNCTION__, 'Bot admin commands file: ' . $this->admin_commands_file . ' is malformed.');
+                    $this->admin_commands = array();
+                }
             }
         }
         //
         $this->_log_it('INFO', __FUNCTION__, 'Bot admin commands loaded:' . "\n\n" . print_r($this->admin_commands, true) . "\n\n");
+        //
+        if (file_exists($this->admin_commands_nonsafe_file))
+        {
+            $admin_commands_nonsafe_text = file_get_contents($this->admin_commands_nonsafe_file);
+            if ($admin_commands_nonsafe_text !== FALSE)
+            {
+                $this->admin_commands_nonsafe = json_decode($admin_commands_nonsafe_text, true);
+                if (!is_array($this->admin_commands_nonsafe))
+                {
+                    $this->_log_it('ERROR', __FUNCTION__, 'Bot admin commands (nonsafe) file: ' . $this->admin_commands_nonsafe_file . ' is malformed.');
+                    $this->admin_commands_nonsafe = array();
+                }
+            }
+        }
+        //
+        $this->_log_it('INFO', __FUNCTION__, 'Bot admin commands (nonsafe) loaded:' . "\n\n" . print_r($this->admin_commands_nonsafe, true) . "\n\n");
         //
         return TRUE;
     }
@@ -538,7 +621,16 @@ class IzyBot {
             $admin_usernames_text = file_get_contents($this->admin_usernames_file);
             if ($admin_usernames_text !== FALSE)
             {
-                $this->admin_usernames = array_merge($this->admin_usernames, json_decode($admin_usernames_text));
+                $admins = json_decode($admin_usernames_text);
+                //
+                if (!is_array($admins))
+                {
+                    $this->_log_it('ERROR', __FUNCTION__, 'Bot admin usernames file: ' . $this->admin_usernames_file . ' is malformed.');
+                }
+                else
+                {
+                    $this->admin_usernames = array_merge($this->admin_usernames, $admins);
+                }
             }
         }
         //
@@ -558,6 +650,11 @@ class IzyBot {
             if ($periodic_messages_text !== FALSE)
             {
                 $this->periodic_messages = json_decode($periodic_messages_text);
+                if (!is_array($this->periodic_messages))
+                {
+                    $this->_log_it('ERROR', __FUNCTION__, 'Bot periodic_messages file: ' . $this->periodic_messages_text . ' is malformed.');
+                    $this->periodic_messages = array();
+                }
             }
         }
         //
@@ -652,6 +749,16 @@ class IzyBot {
             $this->_log_it('DEBUG', __FUNCTION__, 'attempted admin command addition with keyword: ' . $words_in_message_text[1] . ' failed due to reserved keyword.');
             $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' could not be added (reserved keyword).');
             return FALSE;
+        }
+        //
+        foreach ($this->admin_commands_nonsafe as $command => $response)
+        {
+            if ($words_in_message_text[1] == $command)
+            {
+                $this->_log_it('DEBUG', __FUNCTION__, 'attempted admin command addition with keyword: ' . $words_in_message_text[1] . ' failed, command (nonsafe) already exists.');
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Command ' . $words_in_message_text[1] . ' already exists.');
+                return FALSE;
+            }
         }
         //
         foreach ($this->admin_commands as $command => $response)
@@ -809,6 +916,12 @@ class IzyBot {
         {
             $message .= ' ' . $command;
         }
+        //
+        foreach ($this->admin_commands_nonsafe as $command => $response)
+        {
+            $message .= ' ' . $command;
+        }
+        //
         $message .=  ' ' . $this->bot_config['helpcommand_keyword'] . ' ' . $this->bot_config['uptimecommand_keyword'] . ' ' . $this->bot_config['botinfocommand_keyword'] . ' .';
         //
         if ($this->_check_response_should_be_silenced($this->bot_config['helpcommand_keyword']) === FALSE)
@@ -1078,7 +1191,18 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-
+    private function _run_eval_text($command_text)
+    {
+        if (preg_match('/^(.*)?(PHPFUNC(.*)PHPFUNC)(.*)?$/i', $command_text, $matches) === 1)
+        {
+            eval('$ret_text = ' . $matches[3] . ';');
+            return $matches[1] . $ret_text . $matches[4];
+        }
+        else
+        {
+            return $command_text;
+        }
+    }
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 conf/*
 !conf/config.php.TEMPLATE
 !conf/channel_credentials.php.TEMPLATE
+!conf/admin_commands_nonsafe.cfg.TEMPLATE
 
 log/*
 polls/*

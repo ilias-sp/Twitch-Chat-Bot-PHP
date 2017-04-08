@@ -5,6 +5,7 @@ This is Izybot! A simple, yet powerful, Twitch Chat bot in PHP.
 # INTRODUCTION:
 Izybot is a basic Twitch Chat bot, to help make streamers life easier. It will assist you by replying any command you will configure it to do with a relevant message.
 
+
 # FEATURES:
 - Runs locally on user's PC. Needs only PHP installed.
 - bot's admins management via Twitch Chat. Bot admins can configure the bot commands.
@@ -26,7 +27,6 @@ Additionally, you will need a valid Twitch User that the bot will use to authent
 To login to IRC, you will need to obtain an Oath token from Twitch API first. You can obtain it at: https://twitchapps.com/tmi/
 
 
-
 # INSTALLATION:
 
 download the zip from this repository, and extract its contents to a folder.
@@ -37,6 +37,10 @@ to install PHP on Windows, see APPENDIX.
 go to conf directory and copy the config.php.TEMPLATE file to a new file called: config.php
 edit that file and fill in the information required. edit the fields according to the instructions.
 Repeat with the channel_credentials.php.TEMPLATE file: copy it to channel_credentials.php and fill in your channel/username and oath token (obtained from the https://twitchapps.com/tmi/ site)
+
+conf/admin_commands_nonsafe.cfg.TEMPLATE file:
+
+This is for advanced users with PHP knowledge. If you want to use this feature copy this file to conf/admin_commands_nonsafe.cfg and manually add commands that include PHP code (i.e. nonsafe), for producing dynamic output. As a security measure, PHP enabled commands can't be added via Twitch Chat like other regular admin commands.
 
 
 # RUN:
@@ -80,7 +84,7 @@ special reserved commands that are already configured:
 
 
 # APPENDIX:
-Installing PHP on Windows.
+Installing PHP on Windows:
 - download the PHP x86 or x64 version according to your system architecture from: http://php.net/downloads.php.
 - extract its contents in a folder under C:, lets say under folder C:\PHP.
 - cp php.ini-production to php.ini.
@@ -100,6 +104,15 @@ Installing PHP on Windows.
   uncomment it, making it look:
 
   extension=php_mbstring.dll
+
+  same for line:
+
+  ;extension=php_sockets.dll
+
+  uncomment it, making it look:
+
+  extension=php_sockets.dll
+
 
   save the file.
 - add the php binary to the %PATH% env variable:

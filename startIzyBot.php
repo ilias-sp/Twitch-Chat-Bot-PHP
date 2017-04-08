@@ -11,6 +11,7 @@ require_once(APPPATH . '/conf/channel_credentials.php');
 require_once(APPPATH . '/lib/Common.php');
 require_once(APPPATH . '/lib/IzyBot.php');
 
+date_default_timezone_set($config['timezone']);
 
 $twitch_bot = new IzyBot($config);
 
