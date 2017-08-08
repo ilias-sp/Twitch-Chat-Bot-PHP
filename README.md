@@ -13,6 +13,7 @@ Izybot is a basic Twitch Chat bot, to help make streamers life easier. It will a
 - response suppression for confirable interval if same command was replied earlier.
 - periodic messages initiated by the bot. Can be used to promote streamer's social media etc. (Please note that although the periodic messages are initiated by the bot, they still have to be triggered by some activity in the IRC traffic of the channel. This can cause some delay when the channel has not much chat activity, up to 1 minute.)
 - Polls. create poll for the viewers and bot will count their votes.
+- Giveaways. Create giveaways for the viewers, let them participate, and in the end have the bot pick winners randomly from the list.
 
 On the other hand, Bot was not written to be performing Moderator tasks, at least not yet :)
 
@@ -71,6 +72,14 @@ Unless, you have defined otherwise in the wrapper.php, the bot supports the belo
 !makepoll: used to create a new poll. Command syntax is expected to be: !makepoll <poll duration in seconds> <free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)>
 
 !cancelpoll: used to cancel the active poll.
+
+!giveaway-start and !giveaway-end: start and stop the giveaway period, throughout it viewers can join the giveaway.
+
+!giveaway-status: check the current status of the giveaway function, and how many viewers have joined
+
+!giveaway-reset: reset the giveaway. run this before starting a new giveaway.
+
+!giveaway-winner: have Izybot pick up a winner from the eligible viewers list.
 
 
 # USER COMMANDS:

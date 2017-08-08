@@ -33,6 +33,17 @@ $config['admin_removeperiodicmsg_keyword'] = '!removeperiodicmsg';
 // to enable the feature, set the threshold to a value greater than 0 seconds:
 $config['periodic_messages_interval_seconds'] = 60;
 
+// giveaways:
+// for Admins:
+$config['admin_giveaway_start_keyword'] = '!giveaway-start';
+$config['admin_giveaway_stop_keyword'] = '!giveaway-end';
+// $config['admin_giveaway_subs_start_keyword'] = '!giveaway-subs-start';
+// $config['admin_giveaway_subs_stop_keyword'] = '!giveaway-subs-end';
+$config['admin_giveaway_find_winner_keyword'] = '!giveaway-winner';
+$config['admin_giveaway_status_keyword'] = '!giveaway-status';
+$config['admin_giveaway_reset_keyword'] = '!giveaway-reset';
+// for viewers to join:
+$config['giveaway_join_keyword'] = '!giveaway';
 
 // if you want to suppress Bot responses to same commands for a few seconds, 
 // set the desired thresh in seconds. If you want to disable this feature, set the value to 0 seconds.

@@ -44,6 +44,11 @@ class IzyBot {
     private $poll_deadline_timestamp;
     private $poll_duration;
 
+    // giveaway:
+    private $giveaway_currently_enabled;
+    private $giveaway_viewers_list;
+    private $giveaway_start_time;
+
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
@@ -85,6 +90,12 @@ class IzyBot {
                                                      $config['uptimecommand_keyword'],
                                                      $config['admin_makepoll_keyword'],
                                                      $config['admin_cancelpoll_keyword'],
+                                                     $config['admin_giveaway_start_keyword'],
+                                                     $config['admin_giveaway_stop_keyword'],
+                                                     $config['admin_giveaway_find_winner_keyword'],
+                                                     $config['admin_giveaway_status_keyword'],
+                                                     $config['admin_giveaway_reset_keyword'],
+                                                     $config['giveaway_join_keyword'],
                                                      $this->bot_config['botinfocommand_keyword']
         );
 
@@ -108,6 +119,11 @@ class IzyBot {
         $this->active_poll_exists = FALSE;
         $this->votes_array = array();
         $this->poll_help_message = $config['poll_help_message'];
+        
+        // giveaway:
+        $this->giveaway_currently_enabled = FALSE;
+        $this->giveaway_viewers_list = array();
+        $this->giveaway_start_time = NULL;
         
         //
         $this->_log_it('INFO', __FUNCTION__, $this->bot_name . "'s initialization is complete!" . "\n");
@@ -468,6 +484,31 @@ class IzyBot {
                     return FALSE;
                 }
             }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_status_keyword'])
+            {
+                $this->_giveaway_show_status();
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_start_keyword'])
+            {
+                $this->_giveway_status_modify('enable');
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_stop_keyword'])
+            {
+                $this->_giveway_status_modify('disable');
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_find_winner_keyword'])
+            {
+                $this->_giveaway_winner_get();
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_reset_keyword'])
+            {
+                $this->_giveaway_reset();
+                return TRUE;
+            }
         }
         //
         // commands for admins END 
@@ -492,6 +533,11 @@ class IzyBot {
                 $this->active_poll_exists === TRUE)
         {
             $this->_register_users_vote($username, $channel, $words_in_message_text, $message_text);
+            return TRUE;
+        }
+        elseif ($message_text === $this->bot_config['giveaway_join_keyword'])
+        {
+            $this->_giveaway_join_viewer($username);
             return TRUE;
         }
         //
@@ -1206,13 +1252,131 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _giveway_status_modify($status)
+    {
+        if ($status === 'enable')
+        {
+            if ($this->giveaway_currently_enabled === FALSE)
+            {
+                $this->giveaway_currently_enabled = TRUE;
+                $this->giveaway_start_time = date('U');
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway has started. Type ' . $this->bot_config['giveaway_join_keyword'] . ' to join!');
+            }
+            else
+            {
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway is already running.');
+            }
+        }
+        elseif ($status === 'disable')
+        {
+            if ($this->giveaway_currently_enabled === TRUE)
+            {
+                $this->giveaway_currently_enabled = FALSE;
+                $this->giveaway_start_time = NULL;
 
+                $viewers_count = (is_array($this->giveaway_viewers_list)) ? count($this->giveaway_viewers_list) : 0;
+
+                $viewers = ($viewers_count === 1) ? 'viewer' : 'viewers';
+
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway has stopped. ' . $viewers_count . ' ' . $viewers . ' have joined it. Type: ' . $this->bot_config['admin_giveaway_find_winner_keyword'] . ' to get a winner.');
+            }
+            else
+            {
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway was not running.');
+            }
+        }
+        //
+        return TRUE;
+    }
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-
+    private function _giveaway_join_viewer($username)
+    {
+        if ($this->giveaway_currently_enabled === TRUE)
+        {
+            $this->_log_it('INFO', __FUNCTION__, 'adding to the giveaway the viewer: ' . $username );
+        
+            $this->giveaway_viewers_list[] = $username;
+        
+            $this->giveaway_viewers_list = array_unique($this->giveaway_viewers_list);
+        }
+        // $this->_log_it('INFO', __FUNCTION__, 'giveaway users list:' . "\n\n" . print_r($this->giveaway_viewers_list, true) . "\n\n");
+        return TRUE;
+    }
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    
+    private function _giveaway_show_status()
+    {
+        if ($this->giveaway_currently_enabled === TRUE)
+        {
+           $giveaway_uptime = timespan($this->giveaway_start_time);
+           
+           $viewers_count = (is_array($this->giveaway_viewers_list)) ? count($this->giveaway_viewers_list) : 0;           
+
+           $viewers = ($viewers_count === 1) ? 'viewer' : 'viewers';
+           
+           $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway is currently running for ' . $giveaway_uptime . ', ' . $viewers_count . ' ' . $viewers . ' have joined it.');
+
+           $this->_log_it('INFO', __FUNCTION__, 'giveaway users list:' . "\n\n" . print_r($this->giveaway_viewers_list, true) . "\n\n");
+        }
+        else 
+        {
+           $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : No giveaway is currently running.');
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _giveaway_winner_get()
+    {
+        if ($this->giveaway_currently_enabled === TRUE)
+        {
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway is currently running. Please stop it before picking a winner.');
+            return TRUE;
+        }
+        //
+        if (! is_array($this->giveaway_viewers_list))
+        {
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway is not initialized properly. Please reset and then restart it before you can pick up a winner.');
+            return TRUE;
+        }
+        //
+        if (count($this->giveaway_viewers_list) === 0)
+        {
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway has no viewers to pick up from. Please restart the giveaway before you can pick up a winner.');
+            return TRUE;
+        }
+        else
+        {
+            $rand_elements = array_rand($this->giveaway_viewers_list, 1);
+            
+            $this->_log_it('INFO', __FUNCTION__, 'picked up give away winner: ' . $this->giveaway_viewers_list[$rand_elements] );
+
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway winner randomly picked: ' . $this->giveaway_viewers_list[$rand_elements] . ', congrats!');
+            //
+            array_splice($this->giveaway_viewers_list, $rand_elements, 1);
+            //
+            $this->_log_it('INFO', __FUNCTION__, 'giveaway users list after picking a winner and removing him from the list:' . "\n\n" . print_r($this->giveaway_viewers_list, true) . "\n\n");
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _giveaway_reset()
+    {
+        $this->giveaway_viewers_list = array();
+
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : The giveaway was reset.');
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
 }
