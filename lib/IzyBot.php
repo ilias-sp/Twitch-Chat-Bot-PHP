@@ -698,7 +698,7 @@ class IzyBot {
                 $this->periodic_messages = json_decode($periodic_messages_text);
                 if (!is_array($this->periodic_messages))
                 {
-                    $this->_log_it('ERROR', __FUNCTION__, 'Bot periodic_messages file: ' . $this->periodic_messages_text . ' is malformed.');
+                    $this->_log_it('ERROR', __FUNCTION__, 'Bot periodic_messages file: ' . $this->periodic_messages_file . ' is malformed.');
                     $this->periodic_messages = array();
                 }
             }
