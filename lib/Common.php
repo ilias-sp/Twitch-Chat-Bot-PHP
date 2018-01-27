@@ -1,5 +1,6 @@
 <?php
 
+namespace IZYBOT\lib;
 
 function timespan($seconds = 1, $time = '', $units = 7)
 {

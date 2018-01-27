@@ -22,7 +22,7 @@ $config['uptimecommand_keyword'] = '!uptime';
 // set to
 // 1: to reply to users command with @<username>
 // 2: to reply to users command with <username>
-// 3: to reply to users command without reference to the user who triggered it.
+// 3: to reply to users command without reference to the user who triggered the response.
 $config['reply_format'] = 3;
 
 
@@ -52,8 +52,8 @@ $config['duplicate_message_cuttoff_seconds'] = 20;
 
 // logging information:
 // just how to name the log files
-$config['log_file'] = 'IzyBot';
-$config['log_file_irc'] = 'IzyBot_irc';
+$config['log_file_prefix'] = 'IzyBot';
+$config['log_file_prefix_IRC'] = 'IzyBot_IRC';
 
 
 // The name that you want the bot to identify itself in your Twitch Chat.

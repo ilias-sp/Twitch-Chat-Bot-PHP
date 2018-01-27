@@ -1,0 +1,22 @@
+{
+    "name": "gregwar/plankton",
+    "description": "Plankton: a pedagogical PHP pico-framework",
+    "keywords": ["plankton", "framework"],
+    "homepage": "https://github.com/Gregwar/Plankton",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Quentin Rouxel",
+            "email": "qrouxel@labri.fr"
+        },
+        {
+            "name": "Grégoire Passault",
+            "email": "g.passault@gmail.com",
+            "homepage": "http://www.gregwar.com/"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "target-dir": "plankton"
+}
