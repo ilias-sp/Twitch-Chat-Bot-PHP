@@ -89,7 +89,21 @@ function timespan($seconds = 1, $time = '', $units = 7)
 }
 
 
-function retrieve_web_page($web_url, $use_random_user_agent)
+function retrieve_web_page($web_url)
+{
+	$html_response = file_get_contents($web_url);
+
+	if ($html_response === FALSE)
+	{
+		return array($html_response, FALSE);
+	}
+	else
+	{
+		return array($html_response, TRUE);
+	}	
+}
+
+function retrieve_web_page_CURL($web_url, $use_random_user_agent)
 {
 	$ch = curl_init();
 	if ($use_random_user_agent === TRUE)

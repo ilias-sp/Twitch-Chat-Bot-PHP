@@ -1,3 +1,3 @@
-php startIzyBot.php
+php.exe startIzyBot.php
 
 pause

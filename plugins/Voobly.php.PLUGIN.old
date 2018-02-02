@@ -2,6 +2,9 @@
 
 namespace IZYBOT\plugins;
 
+// this implementation relied on curl, but since installing libcurl on Windows is a pickle, switched to file_get_contents().
+// this file is DEPRECATED, dont use.
+
 require_once(APPPATH . '/conf/config_Voobly.php');
 
 function Voobly_getUserRating($username, $bot_config, $logger)
@@ -43,9 +46,9 @@ function Voobly_getUserRating($username, $bot_config, $logger)
 
     // var_dump($user_id_response);
 
-    if ($user_id_response[1] === FALSE)
+    if ($user_id_response[1]['http_code'] !== 200)
     {
-        $logger->log_it('ERROR', __CLASS__, __FUNCTION__, "Error returned while querying Voobly API, file_get_contents returned FALSE.");
+        $logger->log_it('ERROR', __CLASS__, __FUNCTION__, "Error returned while querying Voobly API, http_code !== 200.");
         return "Error returned while querying Voobly API";
     }
 
@@ -87,9 +90,9 @@ function Voobly_getUserRating($username, $bot_config, $logger)
     $user_ranking_response = \IZYBOT\lib\retrieve_web_page($web_address, 'TRUE');
     $logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Voobly API response for user's ranking: " . "\n\n" . print_r($user_ranking_response, TRUE));
 
-    if ($user_ranking_response[1] === FALSE)
+    if ($user_ranking_response[1]['http_code'] !== 200)
     {
-        $logger->log_it('ERROR', __CLASS__, __FUNCTION__, "Error returned while querying Voobly API, file_get_contents returned FALSE");
+        $logger->log_it('ERROR', __CLASS__, __FUNCTION__, "Error returned while querying Voobly API, http_code !== 200.");
         return "Error returned while querying Voobly API";
     }
 
