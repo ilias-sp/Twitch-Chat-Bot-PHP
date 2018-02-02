@@ -33,7 +33,7 @@ $config['admin_removeperiodicmsg_keyword'] = '!removeperiodicmsg';
 // to enable the feature, set the threshold to a value greater than 0 seconds:
 $config['periodic_messages_interval_seconds'] = 60;
 
-// giveaways:
+// giveaways config:
 // for Admins:
 $config['admin_giveaway_start_keyword'] = '!giveaway-start';
 $config['admin_giveaway_stop_keyword'] = '!giveaway-end';

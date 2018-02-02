@@ -57,6 +57,8 @@ class IzyBot {
     private $giveaway_currently_enabled;
     private $giveaway_viewers_list;
     private $giveaway_start_time;
+    private $giveaway_description;
+    private $giveaway_winners_list;
 
     // classes:
     private $appdatahandler;
@@ -145,6 +147,8 @@ class IzyBot {
         $this->giveaway_currently_enabled = FALSE;
         $this->giveaway_viewers_list = array();
         $this->giveaway_start_time = NULL;
+        $this->giveaway_description = '';
+        $this->giveaway_winners_list = array();
 
         // classes:
         $this->appdatahandler = new AppDataHandler($this->bot_config, $this->logger);
@@ -482,12 +486,12 @@ class IzyBot {
             }
             elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_start_keyword'])
             {
-                $this->_giveway_status_modify('enable');
+                $this->_giveway_status_modify('enable', $words_in_message_text);
                 return TRUE;
             }
             elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_stop_keyword'])
             {
-                $this->_giveway_status_modify('disable');
+                $this->_giveway_status_modify('disable', $words_in_message_text);
                 return TRUE;
             }
             elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_find_winner_keyword'])
@@ -528,7 +532,7 @@ class IzyBot {
         }
         elseif ($message_text === $this->bot_config['giveaway_join_keyword'])
         {
-            $this->_giveaway_join_viewer($username);
+            $this->_giveaway_add_viewer($username);
             return TRUE;
         }
         //
@@ -538,7 +542,9 @@ class IzyBot {
             {
                 if ($this->_check_response_should_be_silenced($command) === FALSE)
                 {
-                    $response = $this->_run_eval_text($html_code);
+                    $response = $this->_run_eval_text($html_code, $words_in_message_text);
+                    // var_dump($response);
+                    
                     //
                     $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Received command (nonsafe): ' . $command . ', replying it with: ' . $response);
                     //
@@ -1234,12 +1240,30 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    private function _run_eval_text($command_text)
+    private function AAAAA_run_eval_text($command_text)
     {
         if (preg_match('/^(.*)?(PHPFUNC(.*)PHPFUNC)(.*)?$/i', $command_text, $matches) === 1)
         {
-            eval('$ret_text = ' . $matches[3] . ';');
-            return $matches[1] . $ret_text . $matches[4];
+            // check if $1 exists
+            $command_to_execute = $matches[3];
+            if (preg_match('/^(.*)?(\(\$1\))(.*)?$/i', $command_to_execute, $matches_2) === 1)
+            {
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'nonsafe command includes parameter: ' . $matches_2[2]);
+                // execute command:
+
+                eval('$ret_text = ' . $matches[3] . ';');
+                return $matches[1] . $ret_text . $matches[4];
+                
+            }
+            else
+            {
+                // simple dynamic command:
+                eval('$ret_text = ' . $matches[3] . ';');
+                return $matches[1] . $ret_text . $matches[4];
+            }
+            
+            
+            
         }
         else
         {
@@ -1249,7 +1273,67 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    private function _giveway_status_modify($status)
+    private function _run_eval_text($command_text, $words_in_message_text)
+    {
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Processing nonsafe command with command_text: ' . $command_text );
+
+        if (preg_match('/^(.*)?(PHPFUNC(.*)PHPFUNC)(.*)?$/i', $command_text, $matches) === 1)
+        {
+            // var_dump($matches);
+            
+            // ---------------- Find if it includes $1:
+            if (preg_match('/^(.*)?(PHPFUNC(.*)(\$1)(.*)PHPFUNC)(.*)?$/i', $command_text, $matches_2) === 1)
+            {
+                // var_dump($matches_2);
+                
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'nonsafe command requires to execute command WITH argument: ' . $command_text );
+                $run_with_argument = TRUE;
+            }
+            else
+            {
+                $run_with_argument = FALSE;
+            }
+            //
+            //
+            // run now:
+            if ($run_with_argument === TRUE)
+            {
+                // replace from 1st matches array:
+                // var_dump($matches[3]);
+
+                $command_argument = (empty($words_in_message_text[1])) ? "" : $words_in_message_text[1];
+
+                $final_command_text = preg_replace('/\$1/', '"' . $command_argument . '"', $matches[3]);
+
+                // var_dump($final_command_text);
+                
+                $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'nonsafe command to eval: ' . '$ret_text = ' . $final_command_text . ';' );
+                eval('$ret_text = ' . $final_command_text . ';');
+                return $matches[1] . $ret_text . $matches[4];
+            }
+            else
+            {
+                // just run response as PHP:
+                eval('$ret_text = ' . $matches[3] . ';');
+                return $matches[1] . $ret_text . $matches[4];
+            }
+        }
+        else
+        {
+            // no PHP code to run:
+            //
+            return $command_text;
+        }
+
+        // check if command expects arguments or not:
+        // if (preg_match('/^(.*)?(PHPFUNC\(\$1\)PHPFUNC)(.*)?$/i', $command_text, $matches) === 1)
+        // if (preg_match('/^(.*)?(PHPFUNC(.*)\(\$1\)(.*)PHPFUNC)(.*)?$/i', $command_text, $matches) === 1)        
+  
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _giveway_status_modify($status, $words_in_message_text)
     {
         if ($status === 'enable')
         {
@@ -1257,6 +1341,8 @@ class IzyBot {
             {
                 $this->giveaway_currently_enabled = TRUE;
                 $this->giveaway_start_time = date('U');
+                // description:
+                $this->giveaway_description = implode(' ', array_slice($words_in_message_text, 1));
                 $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway has started. Type ' . $this->bot_config['giveaway_join_keyword'] . ' to join!');
             }
             else
@@ -1269,7 +1355,6 @@ class IzyBot {
             if ($this->giveaway_currently_enabled === TRUE)
             {
                 $this->giveaway_currently_enabled = FALSE;
-                $this->giveaway_start_time = NULL;
 
                 $viewers_count = (is_array($this->giveaway_viewers_list)) ? count($this->giveaway_viewers_list) : 0;
 
@@ -1288,11 +1373,11 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    private function _giveaway_join_viewer($username)
+    private function _giveaway_add_viewer($username)
     {
         if ($this->giveaway_currently_enabled === TRUE)
         {
-            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'adding to the giveaway the viewer: ' . $username );
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'adding the viewer: ' . $username . ' to the giveaway');
         
             $this->giveaway_viewers_list[] = $username;
         
@@ -1350,11 +1435,14 @@ class IzyBot {
         else
         {
             $rand_elements = array_rand($this->giveaway_viewers_list, 1);
+            $giveaway_winner_current = $this->giveaway_viewers_list[$rand_elements];
+            $this->giveaway_winners_list[] = $giveaway_winner_current;
             
-            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'picked up give away winner: ' . $this->giveaway_viewers_list[$rand_elements] );
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'picked up give away winner: ' . $giveaway_winner_current );
 
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway winner randomly picked: ' . $this->giveaway_viewers_list[$rand_elements] . ', congrats!');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Giveaway winner randomly picked: ' . $giveaway_winner_current . ', congrats!');
             //
+            // remove the winner, if administrator wants to pick another viewer for giveaway:
             array_splice($this->giveaway_viewers_list, $rand_elements, 1);
             //
             $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'giveaway users list after picking a winner and removing him from the list:' . "\n\n" . print_r($this->giveaway_viewers_list, true) . "\n\n");
@@ -1367,7 +1455,13 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     private function _giveaway_reset()
     {
+        // write to giveaway file:
+        $this->_write_giveaway_results();
+
+        // reset:
         $this->giveaway_viewers_list = array();
+        $this->giveaway_description = '';
+        $this->giveaway_winners_list = array();
 
         $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : The giveaway was reset.');
         //
@@ -1375,5 +1469,23 @@ class IzyBot {
     }
     //----------------------------------------------------------------------------------
     //
+    //----------------------------------------------------------------------------------
+    private function _write_giveaway_results()
+    {
+        $giveaway_results_file = 'Giveaway_results__' . date('Ymd_H_i') . '.txt';
+
+        $giveaway_results_array = array( 'Giveaway description' => $this->giveaway_description,
+            'Giveaway winners' => $this->giveaway_winners_list,
+            'Giveaway start date' => date('H:i d/m/Y', $this->giveaway_start_time),
+            'Giveaway enrolled users' => array_merge($this->giveaway_winners_list, $this->giveaway_viewers_list)
+        );
+
+        $this->appdatahandler->WriteAppDatafile($giveaway_results_file, 'giveaways', json_encode($giveaway_results_array), 'WRITE');
+
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
     //----------------------------------------------------------------------------------
 }

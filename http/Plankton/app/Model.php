@@ -139,10 +139,6 @@ class Model
 		return $fileinfo;
 	}
 
-
-
-
-
 	public function get_botadministrators()
 	{
 		
@@ -199,7 +195,6 @@ class Model
 		}
 
 	}
-	
 
 	public function get_channel_name()
 	{
@@ -237,5 +232,32 @@ class Model
 		}
 		
 	}
-    
+	
+	public function get_giveaway_files()
+	{
+		$giveawayfiles_dir = $this->appdatadir . '/giveaways';
+
+		$giveawayfiles = $this->get_dir_file_info($giveawayfiles_dir);
+
+		return $giveawayfiles;
+	}
+
+	public function get_giveaway_file_details($file_name)
+	{
+
+		$appdata_file = $this->appdatadir . '/giveaways/' . $file_name;
+
+		if (file_exists($appdata_file)) 
+		{
+			$file_contents = file_get_contents($appdata_file);
+
+			return $file_contents;
+
+		}
+		else
+		{
+			return FALSE;
+		}
+		
+	}
 }

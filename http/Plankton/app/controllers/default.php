@@ -56,6 +56,31 @@
             'poll_details' => $app['model']->get_poll_file_details($poll_filename)
         );
     },
+    '/giveaways_home' => function($app) {
+        return array('giveaways_home',
+            'title' => 'Giveaways',
+            'route' => 'giveaways_home',
+            'giveaway_files' => $app['model']->get_giveaway_files()
+        );
+    },
+    '/giveaway_details' => function($app) {
+
+        $parameters = $app['request']['parameters'];
+        $giveaway_filename = isset($parameters['file']) ? $parameters['file'] : NULL;
+
+        return array('giveaway_details',
+            'title' => 'Giveaway Details',
+            'route' => 'giveaway_details',
+            'giveaway_filename' => $giveaway_filename,
+            'giveaway_details' => $app['model']->get_giveaway_file_details($giveaway_filename)
+        );
+    },
+    '/help' => function($app) {
+        return array('help',
+            'title' => 'Help',
+            'route' => 'help'
+        );
+    },
     '/error' => function() {
         header("HTTP/1.0 404 Not Found");
         header("Status: 404 Not Found");

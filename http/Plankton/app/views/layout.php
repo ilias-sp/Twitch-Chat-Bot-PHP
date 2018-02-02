@@ -36,6 +36,25 @@ else if ($route === 'poll_details')
     render('container_poll_details', array('poll_details' => $poll_details, 'poll_filename' => $poll_filename ), false);
     render('footer', array(), false);
 }
+else if ($route === 'giveaways_home')
+{
+    render('header', array('title' => $title), false);
+    render('container_giveaways_home', array('giveaway_files' => $giveaway_files ), false);
+    render('footer', array(), false);
+}
+else if ($route === 'giveaway_details')
+{
+    render('header', array('title' => $title), false);
+    render('container_giveaway_details', array('giveaway_details' => $giveaway_details, 'giveaway_filename' => $giveaway_filename ), false);
+    render('footer', array(), false);
+}
+else if ($route === 'help')
+{
+    render('header', array('title' => $title), false);
+    render('container_help', array(), false);
+    render('footer', array(), false);
+    render('help_script', array(), false);
+}
 else
 {
     // 404:

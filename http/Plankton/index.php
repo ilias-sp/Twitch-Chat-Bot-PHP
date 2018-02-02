@@ -1,5 +1,14 @@
 <?php // Plankton
 
+// define your TIMEZONE below: should be the same as the value you defined at config.php of IzyBot's configuration:
+
+date_default_timezone_set('Europe/Athens');
+
+
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+
 $root = __DIR__.'/app';
 $app = include($root.'/app.php');
 

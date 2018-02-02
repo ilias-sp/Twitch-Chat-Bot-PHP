@@ -1,3 +1,8 @@
+
+<script>
+$(document).ready(function() {
+
+help_text = `
 # Twitch-Chat-Bot-PHP
 This is Izybot! A simple, yet powerful, Twitch Chat bot in PHP.
 
@@ -153,3 +158,14 @@ IzyBot uses below 3rd open source software:
 - [KLogger](https://github.com/katzgrau/KLogger)
 - [AdminBSB - Material Design Dashboard](https://github.com/gurayyarar/AdminBSBMaterialDesign)
 - [Plankton, a PHP pico framework](https://github.com/Gregwar/Plankton)
+`;
+
+
+
+help_text = help_text.replace(/(?:\r\n|\r|\n)/g, '<br />');
+
+$('#README_MD').html(help_text);
+
+});
+
+</script>

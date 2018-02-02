@@ -1,20 +1,19 @@
 <section class="content">
         <div class="container-fluid">
             <div class="block-header">
-                <h2>Poll details<?php if (isset($poll_filename) && mb_strlen($poll_filename) > 0) {echo ' - <span class="font-bold col-orange">' . $poll_filename . '</span>'; }?></h2>
+                <h2>Giveaway details<?php if (isset($giveaway_filename) && mb_strlen($giveaway_filename) > 0) {echo ' - <span class="font-bold col-orange">' . $giveaway_filename . '</span>'; }?></h2>
             </div>
 
             <?php
 
             $table_text = '';
             $widget_text = '';
-            $poll_text = '';
-            $poll_tables_text = '';
+            $giveaway_tables_text = '';
             $total_count = 0;
 
-            // var_dump($poll_details);
+            // var_dump($giveaway_details);
 
-            if (($poll_details) === FALSE)
+            if (($giveaway_details) === FALSE)
             {
                 // file not found or malformed:
                 $widget_text = '
@@ -25,7 +24,7 @@
                                     <i class="material-icons">recent_actors</i>
                                 </div>
                                 <div class="content">
-                                    <div class="text">VOTES</div>
+                                    <div class="text">Joined the Giveaway</div>
                                     <div class="number">' . $total_count . '</div>
                                 </div>
                             </div>
@@ -34,20 +33,20 @@
         
         ';
                 
-                $poll_text = '
+                $giveaway_text = '
                 <div class="row clearfix">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="card">
                         <div class="header">
                             <h2>
-                                Votes Summary
+                                Giveaway
                                 <small>&nbsp;</small>
                             </h2>
                         </div>
                         <div class="body table-responsive">
                         <div class="alert alert-danger">
                             <strong>Oh snap!</strong> The file you specified was not found. Make sure you used a valid link.<br/><br/>
-                            <a href="/polls_home" class="btn btn-default btn-lg waves-effect">BACK TO POLLS HOME</a>
+                            <a href="/giveaways_home" class="btn btn-default btn-lg waves-effect">BACK TO GIVEAWAYS HOME</a>
                         </div>
                         </div>
                     </div>
@@ -59,28 +58,30 @@
 
                 // prepare widget:
 
-                $poll_details_array = json_decode($poll_details, TRUE);
+                $giveaway_details_array = json_decode($giveaway_details, TRUE);
 
-                // vote count:
-                $votes_summary = '';
-                $votes_array = array();
-                foreach ($poll_details_array as $k => $v)
+                // $votes_array = array();
+                foreach ($giveaway_details_array as $k => $v)
                 {
-                    if ($k === 'Votes')
+                    if ($k === 'Giveaway enrolled users')
                     {
-                        $votes_array = $v;
+                        $giveaway_enrolled_users_list = $v;
                     }
-                    elseif ($k === 'Poll result')
+                    elseif ($k === 'Giveaway start date')
                     {
-                        $votes_summary = $v;
+                        $giveaway_date = $v;
                     }
-                    elseif ($k === 'Poll description')
+                    elseif ($k === 'Giveaway winners')
                     {
-                        $poll_description = $v;
+                        $giveaway_winners_list = $v;
+                    }
+                    elseif ($k === 'Giveaway description')
+                    {
+                        $giveaway_description = $v;
                     }
                 }
 
-                $total_count = count($votes_array);
+                $total_count = count($giveaway_enrolled_users_list);
 
                 //
 
@@ -92,7 +93,7 @@
                             <i class="material-icons">recent_actors</i>
                         </div>
                         <div class="content">
-                            <div class="text">VOTES</div>
+                            <div class="text">Joined the Giveaway</div>
                             <div class="number">' . $total_count . '</div>
                         </div>
                     </div>
@@ -101,46 +102,41 @@
 
 ';
                 
-                // prepare poll_tables_text:
+                // ------------ prepare giveaways winners table START
 
-                // $votes_unique_options = array_unique(array_values($votes_array));
-
-                $votes_vote_options_counts = array_count_values($votes_array);
-                arsort($votes_vote_options_counts);
-
-                // ------------ prepare vote summary table START
-
-                $table_vote_counts_text = '';
+                $table_winners_text = '';
                 $current_counter = 1;
 
-                foreach ($votes_vote_options_counts as $vote_option => $vote_count)
+                asort($giveaway_winners_list);
+
+                foreach ($giveaway_winners_list as $username)
                 {
-                    $table_vote_counts_text .= '
+                    $table_winners_text .= '
                     <tr>
                         <th scope="row">' . $current_counter . '</th>
-                        <td>' . $vote_option . '</td>
-                        <td>' . $vote_count . '</td>
+                        <td>' . $username . '</td>
+                        <td><a href="https://www.twitch.tv/' . $username . '" target="_blank">profile on Twitch</a></td>
                     </tr>
 ';
                 }
 
-                // ------------ prepare vote summary table END
+                // ------------ prepare giveaways winner table END
 
 
-                // ------------ prepare votes in detail table START
+                // ------------ prepare enrolled users table START
 
-                $table_vote_details_text = '';
+                $table_giveaway_enrolled_viewers_details_text = '';
                 $current_counter = 1;
 
-                ksort($votes_array);
+                asort($giveaway_enrolled_users_list);
 
-                foreach ($votes_array as $username => $voted_option)
+                foreach ($giveaway_enrolled_users_list as $username)
                 {
-                    $table_vote_details_text .= '
+                    $table_giveaway_enrolled_viewers_details_text .= '
                     <tr>
                         <th scope="row">' . $current_counter . '</th>
                         <td>' . $username . '</td>
-                        <td>' . $voted_option . '</td>
+                        <td><a href="https://www.twitch.tv/' . $username . '" target="_blank">profile on Twitch</a></td>
                     </tr>
 ';
                     $current_counter++;
@@ -148,48 +144,21 @@
 
 
 
-                // ------------ prepare votes in detail table END
+                // ------------ prepare enrolled users table END
 
 
-                $poll_text = '
+                $giveaway_text = '
                 <div class="row clearfix">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="card">
-                        <div class="header">
-                            <h2>
-                                <span class="font-bold col-orange">' . $poll_description  . '</span> - Votes Summary
-                                <small>&nbsp;</small>
-                            </h2>
-                        </div>
                         <div class="body table-responsive">
                         <div class="alert alert-info">
-                            ' . $votes_summary . '
+                        ' . $giveaway_description . '
                         </div>
 
                         <div class="header">
                             <h2>
-                                <span class="font-bold col-orange">Votes summary
-                                <small>&nbsp;</small>
-                            </h2>
-                        </div>
-
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th class="col-xs-4">#</th>
-                                        <th class="col-xs-4">VOTE OPTION</th>
-                                        <th class="col-xs-4">VOTE COUNTS</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                ' . $table_vote_counts_text . '
-                                </tbody>
-                            </table>
-
-                        
-                        <div class="header">
-                            <h2>
-                                <span class="font-bold col-orange">Votes in details
+                                <span class="font-bold col-orange">Giveaway winners
                                 <small>&nbsp;</small>
                             </h2>
                         </div>
@@ -199,11 +168,32 @@
                                     <tr>
                                         <th class="col-xs-4">#</th>
                                         <th class="col-xs-4">USERNAME</th>
-                                        <th class="col-xs-4">VOTED OPTION</th>
+                                        <th class="col-xs-4">PROFILE ON TWITCH</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                ' . $table_vote_details_text . '
+                                ' . $table_winners_text . '
+                                </tbody>
+                            </table>
+
+                        
+                        <div class="header">
+                            <h2>
+                                <span class="font-bold col-orange">Giveaway enrolled viewers
+                                <small>&nbsp;</small>
+                            </h2>
+                        </div>
+
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="col-xs-4">#</th>
+                                        <th class="col-xs-4">USERNAME</th>
+                                        <th class="col-xs-4">PROFILE ON TWITCH</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                ' . $table_giveaway_enrolled_viewers_details_text . '
                                 </tbody>
                             </table>
 
@@ -219,7 +209,7 @@
 
             echo $widget_text;
                             
-            echo $poll_text;
+            echo $giveaway_text;
 
             ?>
 

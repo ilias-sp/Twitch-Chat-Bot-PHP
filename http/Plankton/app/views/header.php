@@ -121,6 +121,18 @@
                             <span>Polls</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="/giveaways_home">
+                            <i class="material-icons">pie_chart</i>
+                            <span>Giveaways</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/help">
+                            <i class="material-icons">help</i>
+                            <span>Help</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
             <!-- #Menu -->

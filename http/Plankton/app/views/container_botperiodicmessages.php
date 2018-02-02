@@ -20,7 +20,7 @@
                         <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-6 col-sm-6 col-xs-12">
                             <div class="info-box bg-orange info-box hover-zoom-effect">
                                 <div class="icon">
-                                    <i class="material-icons">equalizer</i>
+                                    <i class="material-icons">update</i>
                                 </div>
                                 <div class="content">
                                     <div class="text">PERIODIC MESSAGES</div>
@@ -45,7 +45,7 @@
                 <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-6 col-sm-6 col-xs-12">
                     <div class="info-box bg-orange info-box hover-zoom-effect">
                         <div class="icon">
-                            <i class="material-icons">equalizer</i>
+                            <i class="material-icons">update</i>
                         </div>
                         <div class="content">
                             <div class="text">PERIODIC MESSAGES</div>

@@ -1,0 +1,8 @@
+<?php
+
+
+
+// Voobly authentication requires an API key.
+// Acquire one at: http://www.voobly.com
+
+$config['Voobly_API_KEY'] = '';

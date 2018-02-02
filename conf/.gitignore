@@ -1,0 +1,9 @@
+*
+!config.php.TEMPLATE
+!channel_credentials.php.TEMPLATE
+!admin_commands_nonsafe.cfg.TEMPLATE
+!config_Voobly.php.TEMPLATE
+
+
+!.gitignore
+
