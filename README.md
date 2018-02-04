@@ -76,7 +76,7 @@ Unless, you have defined otherwise in the startIzyBot.php, the bot supports the 
 
 !cancelpoll: used to cancel the active poll.
 
-!giveaway-start <title>: will start the giveaway title. You can optionally add any string as description to the giveaway.
+!giveaway-start "title": will start the giveaway title. You can optionally add any string as description to the giveaway.
 
 !giveaway-end: will stop the giveaway, throughout it viewers can join the giveaway.
 

@@ -81,7 +81,7 @@ Unless, you have defined otherwise in the startIzyBot.php, the bot supports the 
 
 !cancelpoll: used to cancel the active poll.
 
-!giveaway-start <title>: will start the giveaway title. You can optionally add any string as description to the giveaway.
+!giveaway-start "title": will start the giveaway title. You can optionally add any string as description to the giveaway.
 
 !giveaway-end: will stop the giveaway, throughout it viewers can join the giveaway.
 
@@ -90,6 +90,10 @@ Unless, you have defined otherwise in the startIzyBot.php, the bot supports the 
 !giveaway-reset: reset the giveaway. run this before starting a new giveaway. This command will flush the current giveaway's details (title) to file.
 
 !giveaway-winner: have Izybot pick up a winner from the eligible viewers list. You can run this multiple times to select more than one winners.
+
+
+# LOYALTY POINTS
+Loyalty points is a virtual currency that is awarded to viewers, according to their presence in the channel. They can use this virtual currency on bets. To enable and configure it, see config.php.
 
 
 # USER COMMANDS
