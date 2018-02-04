@@ -116,6 +116,12 @@
                         </ul>
                     </li>
                     <li>
+                        <a href="/loyaltypoints">
+                            <i class="material-icons">monetization_on</i>
+                            <span>Loyalty Points</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="/polls_home">
                             <i class="material-icons">insert_chart</i>
                             <span>Polls</span>

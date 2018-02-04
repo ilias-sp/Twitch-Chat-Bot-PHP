@@ -260,4 +260,21 @@ class Model
 		}
 		
 	}
+
+	public function get_viewers_loyalty_XP_details()
+	{
+		$appdata_file = $this->appdatadir . '/appdata/loyalty_viewers_XP_array.cfg';
+
+		if (file_exists($appdata_file)) 
+		{
+			$file_contents = file_get_contents($appdata_file);
+
+			return $file_contents;
+
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
 }

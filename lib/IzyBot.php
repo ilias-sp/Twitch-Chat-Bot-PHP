@@ -60,6 +60,15 @@ class IzyBot {
     private $giveaway_description;
     private $giveaway_winners_list;
 
+    // loyalty points:
+    private $loyalty_currency;
+    private $loyalty_points_per_interval;
+    private $loyalty_check_interval;
+    private $loyalty_check_last_date_done;
+    private $loyalty_viewers_XP_array;
+    private $loyalty_viewers_XP_file;
+    private $loyalty_commands;
+
     // classes:
     private $appdatahandler;
 
@@ -85,6 +94,9 @@ class IzyBot {
         $logger_config = array ('log_file_prefix' => $this->bot_config['log_file_prefix_IRC']
         );
         $this->IRC_logger = new Logger($logger_config);
+
+        // classes:
+        $this->appdatahandler = new AppDataHandler($this->bot_config, $this->logger);
 
         // logging info:
         // $this->log_file = APPPATH . '/log/' . $config['log_file'] . '__' . date('Ymd_H_i') . '.txt';
@@ -150,8 +162,23 @@ class IzyBot {
         $this->giveaway_description = '';
         $this->giveaway_winners_list = array();
 
-        // classes:
-        $this->appdatahandler = new AppDataHandler($this->bot_config, $this->logger);
+        // loyalty points:
+        $this->loyalty_currency = $config['loyalty_currency'];
+        $this->loyalty_points_per_interval = $config['loyalty_points_per_interval'];
+        $this->loyalty_check_interval = $config['loyalty_check_interval'];
+        $this->loyalty_check_last_date_done = date('U');
+        $this->loyalty_viewers_XP_file = 'loyalty_viewers_XP_array.cfg';
+
+        if ($this->bot_config['loyalty_points_per_interval'] > 0)
+        {
+            $this->admin_commands_reserved_names[] = $config['loyaltypoints_keyword'];
+            $this->loyalty_commands = array($config['loyaltypoints_keyword']
+            );
+        }
+        else
+        {
+            $this->loyalty_commands = array();
+        }
         
         //
         $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, $this->bot_name . "'s initialization is complete!" . "\n");
@@ -285,6 +312,7 @@ class IzyBot {
                 //
                 NOMESSAGE:
                 $this->_check_and_send_periodic_message();
+                $this->_check_and_query_loyalty_URL();
                 if ($this->active_poll_exists === TRUE)
                 {
                     $this->_monitor_ongoing_poll();
@@ -530,6 +558,11 @@ class IzyBot {
             $this->_register_users_vote($username, $channel, $words_in_message_text, $message_text);
             return TRUE;
         }
+        elseif ($message_text === $this->bot_config['loyaltypoints_keyword'])
+        {
+            $this->_display_loyalty_XP_of_viewer($username);
+            return TRUE;
+        }
         elseif ($message_text === $this->bot_config['giveaway_join_keyword'])
         {
             $this->_giveaway_add_viewer($username);
@@ -743,6 +776,16 @@ class IzyBot {
 
         return TRUE;
 
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _write_loyalty_viewers_XP()
+    {
+        
+        $this->appdatahandler->WriteAppDatafile($this->loyalty_viewers_XP_file, 'appdata', json_encode($this->loyalty_viewers_XP_array), 'WRITE');
+
+        return TRUE;
 
     }
     //----------------------------------------------------------------------------------
@@ -753,6 +796,7 @@ class IzyBot {
         $this->_read_admin_commands();
         $this->_read_admin_usernames();
         $this->_read_periodic_messages();
+        $this->_read_loyalty_viewers_XP_array();
         //
         return $this;
     }
@@ -964,6 +1008,11 @@ class IzyBot {
         }
         //
         foreach ($this->admin_commands_nonsafe as $command => $response)
+        {
+            $message .= ' ' . $command;
+        }
+        //
+        foreach ($this->loyalty_commands as $command)
         {
             $message .= ' ' . $command;
         }
@@ -1488,4 +1537,200 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
+    private function _read_loyalty_viewers_XP_array()
+    {
+        $loyalty_viewers_XP_text = $this->appdatahandler->ReadAppDatafile($this->loyalty_viewers_XP_file, 'READ');
+
+        if ($loyalty_viewers_XP_text[0] === TRUE)
+        {
+            $this->loyalty_viewers_XP_array = json_decode($loyalty_viewers_XP_text[2], true);
+            if (!is_array($this->loyalty_viewers_XP_array))
+            {
+                $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Loyalty viewers XP file: ' . $this->loyalty_viewers_XP_file . ' is malformed.');
+                $this->loyalty_viewers_XP_array = array();
+            }
+        }
+        else
+        {
+            $this->loyalty_viewers_XP_array = array();
+        }
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Loyalty viewers XP loaded.');
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _check_and_query_loyalty_URL()
+    {
+        if (date('U') - $this->loyalty_check_last_date_done > $this->loyalty_check_interval &&
+            count($this->loyalty_points_per_interval) > 0
+            )
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Time to query twitch URL for chatters currently active.');
+            // ----------------------------------
+            $check_was_successful = NULL;
+
+
+            $tmi_twitch_url = 'https://tmi.twitch.tv/group/user/' . $this->bot_config['channel'] . '/chatters';
+            
+            $chatters_web_response = \IZYBOT\lib\retrieve_web_page($tmi_twitch_url, 'TRUE');
+
+            if ($chatters_web_response[1] === FALSE)
+            {
+                $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Twitch response for chatters returned FALSE, URL queried was: ' . $tmi_twitch_url);
+                $check_was_successful = FALSE;
+                GOTO ENDOFCHATTERSQUERYPROCESSING;
+            }
+
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Twitch response for chatters was: ' . print_r($chatters_web_response, TRUE));
+
+            $json_response = json_decode($chatters_web_response[0], TRUE);
+
+            if ($json_response === FALSE)
+            {
+                $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Twitch response could not be json_decoded, URL queried was: ' . $tmi_twitch_url);
+                $check_was_successful = FALSE;
+                GOTO ENDOFCHATTERSQUERYPROCESSING;
+            }
+            
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Twitch response reports there are: ' . $json_response['chatter_count'] . ' people in the chat');
+            
+            //-----
+            $viewers_in_json = array();
+
+            if (isset($json_response['chatters']['moderators']))
+            {
+                $viewers_in_json = array_merge($viewers_in_json, $json_response['chatters']['moderators']);
+            }
+            if (isset($json_response['chatters']['staff']))
+            {
+                $viewers_in_json = array_merge($viewers_in_json, $json_response['chatters']['staff']);
+            }
+            if (isset($json_response['chatters']['admins']))
+            {
+                $viewers_in_json = array_merge($viewers_in_json, $json_response['chatters']['admins']);
+            }
+            if (isset($json_response['chatters']['global_mods']))
+            {
+                $viewers_in_json = array_merge($viewers_in_json, $json_response['chatters']['global_mods']);
+            }
+            if (isset($json_response['chatters']['viewers']))
+            {
+                $viewers_in_json = array_merge($viewers_in_json, $json_response['chatters']['viewers']);
+            }
+
+            // $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'viewers_in_json: ' . print_r($viewers_in_json, TRUE));
+
+            foreach ($viewers_in_json as $username)
+            {
+                $this->_add_loyalty_XP_to_user($username);
+            }
+            // 
+            // uasort($this->loyalty_viewers_XP_array, array($this, '_username_sort_array'));
+            // 
+            // $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'After Twitch response, loyalty_viewers_XP_array is: ' . "\n\n" . print_r($this->loyalty_viewers_XP_array, TRUE) . "\n\n");
+            
+            // write to file:
+            $this->_write_loyalty_viewers_XP();
+            $check_was_successful = TRUE;
+            // ----------------------------------
+            ENDOFCHATTERSQUERYPROCESSING:
+            // increment last date check was done:
+            if ($check_was_successful === TRUE)
+            {
+                $this->loyalty_check_last_date_done = date('U');
+            }
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _add_loyalty_XP_to_user($username)
+    {
+        // check if there is entry for this username.
+        $key_for_username = array_search($username, array_column($this->loyalty_viewers_XP_array, 'username'));
+
+        if ($key_for_username === FALSE)
+        {
+            // new username:
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Username: ' . $username . ' was not found in loyalty_viewers_XP array. Adding it..');
+
+            $this->loyalty_viewers_XP_array[] = array( 'username' => $username,
+                'points' => $this->loyalty_points_per_interval,
+                'last_date_seen' => date('U')
+            );
+        }
+        else
+        {
+            // username already exists:
+            // $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Username: ' . $username . ' was found.');
+            
+            $points_before = $this->loyalty_viewers_XP_array[$key_for_username]['points'];
+
+            $this->loyalty_viewers_XP_array[$key_for_username] = array( 'username' => $username,
+                'points' => $this->loyalty_points_per_interval + $points_before,
+                'last_date_seen' => date('U')
+            );
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _display_loyalty_XP_of_viewer($username)
+    {
+        // check if there is entry for this username.
+        $key_for_username = array_search($username, array_column($this->loyalty_viewers_XP_array, 'username'));
+
+        if ($key_for_username === FALSE)
+        {
+            // new username:
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $username . ' has 0 ' . $this->loyalty_currency . '.');
+            return TRUE;
+        }
+        else
+        {
+            // username exists:
+            $loyalty_XP = $this->loyalty_viewers_XP_array[$key_for_username]['points'];
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $username . ' has ' . $loyalty_XP . ' ' . $this->loyalty_currency . '.');
+            return TRUE;
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _username_sort_array($a, $b) {
+        if ($a == $b) {
+            return 0;
+        }
+        return ($a < $b) ? -1 : 1;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+
 }

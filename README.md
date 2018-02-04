@@ -87,6 +87,10 @@ Unless, you have defined otherwise in the startIzyBot.php, the bot supports the 
 !giveaway-winner: have Izybot pick up a winner from the eligible viewers list. You can run this multiple times to select more than one winners.
 
 
+# LOYALTY POINTS
+Loyalty points is a virtual currency that is awarded to viewers, according to their presence in the channel. They can use this virtual currency on bets. To enable and configure it, see config.php.
+
+
 # USER COMMANDS
 special reserved commands that are already configured:
 

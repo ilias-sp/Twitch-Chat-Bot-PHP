@@ -48,6 +48,12 @@ else if ($route === 'giveaway_details')
     render('container_giveaway_details', array('giveaway_details' => $giveaway_details, 'giveaway_filename' => $giveaway_filename ), false);
     render('footer', array(), false);
 }
+else if ($route === 'loyalty_points')
+{
+    render('header', array('title' => $title), false);
+    render('container_loyalty_points', array('loyalty_details' => $loyalty_details ), false);
+    render('footer', array(), false);
+}
 else if ($route === 'help')
 {
     render('header', array('title' => $title), false);

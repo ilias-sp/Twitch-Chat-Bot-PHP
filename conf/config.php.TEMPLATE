@@ -77,3 +77,13 @@ $config['admin_cancelpoll_keyword'] = '!cancelpoll';
 $config['votecommand_keyword'] = '!vote';
 $config['new_poll_announcement_message'] = 'New poll is running';
 $config['poll_closure_announcement_message'] = 'Poll was closed.';
+
+
+// loyalty config:
+// 
+// how many points a viewers is awarded per check interval. if you set it to 0, feature is disabled:
+$config['loyalty_points_per_interval'] = 10;
+$config['loyalty_currency'] = 'IzyEuro';
+$config['loyalty_check_interval'] = 30; // in seconds
+
+$config['loyaltypoints_keyword'] = '!izyeuros';

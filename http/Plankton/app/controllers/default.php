@@ -75,6 +75,13 @@
             'giveaway_details' => $app['model']->get_giveaway_file_details($giveaway_filename)
         );
     },
+    '/loyaltypoints' => function($app) {
+        return array('Loyalty Points',
+            'title' => 'Loyalty Points',
+            'route' => 'loyalty_points',
+            'loyalty_details' => $app['model']->get_viewers_loyalty_XP_details()
+        );
+    },
     '/help' => function($app) {
         return array('help',
             'title' => 'Help',
