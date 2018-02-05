@@ -91,9 +91,16 @@ Unless, you have defined otherwise in the startIzyBot.php, the bot supports the 
 
 !giveaway-winner: have Izybot pick up a winner from the eligible viewers list. You can run this multiple times to select more than one winners.
 
+!addquote: to add a quote.
+
+!removequote: to remove a quote, followed by its numerical ID.
+
 
 # LOYALTY POINTS
 Loyalty points is a virtual currency that is awarded to viewers, according to their presence in the channel. They can use this virtual currency on bets. To enable and configure it, see config.php.
+
+# QUOTES
+Quotes can be added to the bot configuration, and displayed on demand.
 
 
 # USER COMMANDS
@@ -102,6 +109,8 @@ special reserved commands that are already configured:
 !help: will reply the list of available commands for the users (not including the admin commands).,
 
 !uptime: will reply the uptime of the bot. This should not be assumed it is the same as the uptime of the stream (unless you start the bot simultaneously with the stream session).
+
+!quote "ID": to display a specific quote. pass no ID, to display a random quote.
 
 !botinfo: a command to print information about this bot and where people can find it.
 

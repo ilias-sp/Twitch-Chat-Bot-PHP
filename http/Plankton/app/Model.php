@@ -277,4 +277,21 @@ class Model
 			return FALSE;
 		}
 	}
+
+	public function get_quotes()
+	{
+		$appdata_file = $this->appdatadir . '/appdata/quotes.cfg';
+
+		if (file_exists($appdata_file)) 
+		{
+			$file_contents = file_get_contents($appdata_file);
+
+			return $file_contents;
+
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
 }

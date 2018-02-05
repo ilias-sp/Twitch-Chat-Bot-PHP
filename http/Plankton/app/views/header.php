@@ -113,6 +113,9 @@
                             <li>
                                 <a href="/config/periodicmessages">Periodic Messages</a>
                             </li>
+                            <li>
+                                <a href="/config/quotes">Quotes</a>
+                            </li>
                         </ul>
                     </li>
                     <li>

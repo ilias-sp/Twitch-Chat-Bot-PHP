@@ -39,12 +39,16 @@ class IzyBot {
     private $duplicate_message_cuttoff_seconds;
     private $bot_responses_last_date;
 
+    // periodic messages:
     private $periodic_messages_interval_seconds;
     private $periodic_messages;
     private $periodic_messages_file;
     private $periodic_messages_last_message_sent_index;
     private $periodic_messages_last_date_sent;
 
+    // quotes:
+    private $quotes;
+    private $quotes_file;
 
     // poll stuff:
     private $poll_question;
@@ -130,6 +134,9 @@ class IzyBot {
                                                      $config['admin_giveaway_find_winner_keyword'],
                                                      $config['admin_giveaway_status_keyword'],
                                                      $config['admin_giveaway_reset_keyword'],
+                                                     $config['admin_addquote_keyword'],
+                                                     $config['admin_removequote_keyword'],
+                                                     $config['quote_keyword'],
                                                      $config['giveaway_join_keyword'],
                                                      $this->bot_config['botinfocommand_keyword']
         );
@@ -146,6 +153,8 @@ class IzyBot {
         $this->periodic_messages_last_message_sent_index = -1;
         $this->periodic_messages_interval_seconds = $config['periodic_messages_interval_seconds'];
         
+        // quotes:
+        $this->quotes_file = 'quotes.cfg';
         //
         $this->duplicate_message_cuttoff_seconds = $config['duplicate_message_cuttoff_seconds'];
         $this->bot_responses_last_date = array();
@@ -532,6 +541,21 @@ class IzyBot {
                 $this->_giveaway_reset();
                 return TRUE;
             }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_addquote_keyword'])
+            {
+                $this->_add_quote($username, $channel, $words_in_message_text, $message_text);
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_removequote_keyword'])
+            {
+                $this->_remove_quote($username, $channel, $words_in_message_text, $message_text);
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['quote_keyword'])
+            {
+                $this->_display_quote($username, $channel, $words_in_message_text, $message_text);
+                return TRUE;
+            }
         }
         //
         // commands for admins END 
@@ -566,6 +590,11 @@ class IzyBot {
         elseif ($message_text === $this->bot_config['giveaway_join_keyword'])
         {
             $this->_giveaway_add_viewer($username);
+            return TRUE;
+        }
+        elseif ($message_text === $this->bot_config['quote_keyword'])
+        {
+            $this->_display_quote($username, $channel, $words_in_message_text, $message_text);
             return TRUE;
         }
         //
@@ -748,6 +777,32 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _read_quotes()
+    {
+
+        $quotes_text = $this->appdatahandler->ReadAppDatafile($this->quotes_file, 'READ');
+
+        if ($quotes_text[0] === TRUE)
+        {
+            $this->quotes = json_decode($quotes_text[2], true);
+            if (!is_array($this->quotes))
+            {
+                $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Bot quotes file: ' . $this->quotes_file . ' is malformed.');
+                $this->quotes = array();
+            }
+        }
+        else
+        {
+            $this->quotes = array();
+        }
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Bot quotes loaded:' . "\n\n" . print_r($this->quotes, true) . "\n\n");
+
+        return TRUE;
+
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _write_admin_commands()
     {
 
@@ -780,6 +835,17 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _write_quotes()
+    {
+        
+        $this->appdatahandler->WriteAppDatafile($this->quotes_file, 'appdata', json_encode($this->quotes), 'WRITE');
+
+        return TRUE;
+
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _write_loyalty_viewers_XP()
     {
         
@@ -796,6 +862,7 @@ class IzyBot {
         $this->_read_admin_commands();
         $this->_read_admin_usernames();
         $this->_read_periodic_messages();
+        $this->_read_quotes();
         $this->_read_loyalty_viewers_XP_array();
         //
         return $this;
@@ -911,6 +978,31 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _add_quote($username, $channel, $words_in_message_text, $message_text)
+    {
+        $quote_text = implode(' ', array_slice($words_in_message_text, 1));
+        //
+        if (array_search($quote_text, $this->quotes) !== FALSE)
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'attempted quote addition with text: ' . $quote_text . ' failed, quote already exists.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : This quote already exists.');
+            RETURN FALSE;
+        }
+        //
+        $next_id = count($this->quotes) + 1;
+        $this->quotes[] = array( 'id' => $next_id,
+            'text' => $quote_text
+        );
+
+        $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Quote: #' . $next_id . ' was added.');
+        $this->_write_quotes();
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Quote: #' . $next_id . ' was added.');
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _edit_admin_command($username, $channel, $words_in_message_text, $message_text)
     {
         foreach ($this->admin_commands as $command => $response)
@@ -979,6 +1071,62 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _remove_quote($username, $channel, $words_in_message_text, $message_text)
+    {
+        $message_response = NULL;
+            
+        if (count($words_in_message_text) > 1)
+        {
+            if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) === 1)
+            {
+                $requested_quote_id = $words_in_message_text[1];
+            }
+            else
+            {
+                $message_response = 'The numeric id of the quote is expected to complete this command.';
+                GOTO ENDOFREMOVEQUOTE;
+            }
+        }
+        else
+        {
+            $message_response = 'The numeric id of the quote is expected to complete this command.';
+            GOTO ENDOFREMOVEQUOTE;
+        }
+        
+        //
+        $key_id = NULL;
+        
+        foreach ($this->quotes as $array_key => $quote)
+        {
+            if ($quote['id'] == $requested_quote_id)
+            {
+                $key_id = $array_key;
+            }
+        }
+        
+        if ($key_id !== NULL)
+        {
+            unset($this->quotes[$key_id]);
+            $this->_write_quotes();
+            $message_response = 'Quote #' . $requested_quote_id . ' was deleted.';
+            GOTO ENDOFREMOVEQUOTE;
+        }
+        else
+        {
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : Quote #' . $requested_quote_id . ' was not found.');
+            return FALSE;
+        }
+        // 
+        ENDOFREMOVEQUOTE:
+        if ($message_response !== NULL)
+        {
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $message_response);
+        }
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _remove_admin_username($username, $channel, $words_in_message_text, $message_text)
     {
         if (array_search($words_in_message_text[1], $this->admin_usernames) !== FALSE)
@@ -1017,7 +1165,7 @@ class IzyBot {
             $message .= ' ' . $command;
         }
         //
-        $message .=  ' ' . $this->bot_config['helpcommand_keyword'] . ' ' . $this->bot_config['uptimecommand_keyword'] . ' ' . $this->bot_config['botinfocommand_keyword'] . ' .';
+        $message .=  ' ' . $this->bot_config['helpcommand_keyword'] . ' ' . $this->bot_config['uptimecommand_keyword'] . ' ' . $this->bot_config['quote_keyword'] . ' ' . $this->bot_config['botinfocommand_keyword'] . ' .';
         //
         if ($this->_check_response_should_be_silenced($this->bot_config['helpcommand_keyword']) === FALSE)
         {
@@ -1041,6 +1189,70 @@ class IzyBot {
             $this->_add_command_to_bot_responses_last_date($this->bot_config['uptimecommand_keyword']);
         }
         //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _display_quote($username, $channel, $words_in_message_text, $message_text)
+    {
+        //
+        
+
+        if ($this->_check_response_should_be_silenced($this->bot_config['quote_keyword']) === FALSE)
+        {
+            // check if quote # was included:
+
+            $requested_quote_id = NULL;
+            
+            if (count($words_in_message_text) > 1)
+            {
+                if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) === 1)
+                {
+                    $requested_quote_id = $words_in_message_text[1];
+                }
+                else
+                {
+                    $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'quote parameter passed is not numeric: ' . $words_in_message_text[1]);
+                    GOTO ENDDISPLAYQUOTEQUOTE;
+                }
+            }
+            
+            //
+            if ($requested_quote_id === NULL)
+            {
+                // select a random:
+                $key_id = array_rand($this->quotes, 1);
+                $quote_text = '#' . $this->quotes[$key_id]['id'] . ' - ' . $this->quotes[$key_id]['text'];
+            }
+            else
+            {
+                $key_id = NULL;
+
+                foreach ($this->quotes as $array_key => $quote)
+                {
+                    if ($quote['id'] == $requested_quote_id)
+                    {
+                        $key_id = $array_key;
+                    }
+                }
+
+                if ($key_id === NULL)
+                {
+                    // quote not found:
+                    $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'quote not found for id: #' . $requested_quote_id);
+                    GOTO ENDDISPLAYQUOTEQUOTE;
+                }
+                else
+                {
+                    $quote_text = '#' . $this->quotes[$key_id]['id'] . ' - ' . $this->quotes[$key_id]['text'];
+                }
+            }
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : ' . $quote_text);
+            $this->_add_command_to_bot_responses_last_date($this->bot_config['quote_keyword']);
+        }
+        //
+        ENDDISPLAYQUOTEQUOTE:
         return TRUE;
     }
     //----------------------------------------------------------------------------------

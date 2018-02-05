@@ -30,6 +30,13 @@
             'periodic_messages' => $app['model']->get_botperiodic_msgs()
         );
     },
+    '/config/quotes' => function($app) {
+        return array('botquotes',
+            'title' => 'Quotes - Configuration',
+            'route' => 'config_botquotes',
+            'quotes' => $app['model']->get_quotes()
+        );
+    },
     '/twitchchat' => function($app) {
         return array('twitchchat',
             'title' => 'Twitch Chat',

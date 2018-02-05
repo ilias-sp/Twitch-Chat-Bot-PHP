@@ -26,12 +26,17 @@ $config['uptimecommand_keyword'] = '!uptime';
 $config['reply_format'] = 3;
 
 
-// periodic messages:
+// periodic messages config:
 $config['admin_addperiodicmsg_keyword'] = '!addperiodicmsg';
 $config['admin_removeperiodicmsg_keyword'] = '!removeperiodicmsg';
 
 // to enable the feature, set the threshold to a value greater than 0 seconds:
 $config['periodic_messages_interval_seconds'] = 60;
+
+// quotes config:
+$config['admin_addquote_keyword'] = '!addquote';
+$config['admin_removequote_keyword'] = '!removequote';
+$config['quote_keyword'] = '!quote';
 
 // giveaways config:
 // for Admins:
@@ -60,15 +65,6 @@ $config['log_file_prefix_IRC'] = 'IzyBot_IRC';
 $config['bot_name'] = 'IzyBot';
 
 
-// set the desired log level according to below rules:
-//
-// DEBUG to see all messages
-// INFO to see only info and error messages
-// ERROR to see only error messages
-//
-$config['log_level'] = 'INFO';
-
-
 // Polls config:
 // 
 $config['poll_help_message'] = '<poll\'s duration in minutes> <free text describing the poll>';
@@ -84,6 +80,6 @@ $config['poll_closure_announcement_message'] = 'Poll was closed.';
 // how many points a viewers is awarded per check interval. if you set it to 0, feature is disabled:
 $config['loyalty_points_per_interval'] = 10;
 $config['loyalty_currency'] = 'IzyEuro';
-$config['loyalty_check_interval'] = 30; // in seconds
+$config['loyalty_check_interval'] = 120; // in seconds
 
 $config['loyaltypoints_keyword'] = '!izyeuros';

@@ -18,6 +18,12 @@ else if ($route === 'config_botperiodicmessages')
     render('container_botperiodicmessages', array('periodic_messages' => $periodic_messages ), false);
     render('footer', array(), false);
 }
+else if ($route === 'config_botquotes')
+{
+    render('header', array('title' => $title), false);
+    render('container_botquotes', array('quotes' => $quotes ), false);
+    render('footer', array(), false);
+}
 else if ($route === 'twitchchat')
 {
     render('header', array('title' => $title), false);
