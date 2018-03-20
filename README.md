@@ -54,6 +54,20 @@ This uses the php built-in web server. To start it, run the supplied batch file 
 
 To access the Web interface, open this link from your browser: http://127.0.0.1:33333/
 
+# SAMPLE PREVIEW PICS FROM THE WEB INTERFACE
+
+Twitch Chat:
+
+![Preview image](preview/twitch.png?raw=true "Preview image")
+
+Polls:
+
+![Preview image](preview/polls.png?raw=true "Preview image")
+
+Viewers Loyalty Points:
+
+![Preview image](preview/loyalty.png?raw=true "Preview image")
+
 
 # ADMIN COMMANDS
 Unless, you have defined otherwise in the startIzyBot.php, the bot supports the below admin reserved commands:
