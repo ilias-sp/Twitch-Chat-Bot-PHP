@@ -24,6 +24,9 @@
     <!-- Custom Css -->
     <link href="/http_res/css/style.css" rel="stylesheet">
 
+    <!-- JQuery DataTable Css -->
+    <link href="/http_res/plugins/jquery-datatable/skin/bootstrap/css/dataTables.bootstrap.css" rel="stylesheet">
+
     <!-- AdminBSB Themes. You can choose a theme from css/themes instead of get all themes -->
     <link href="/http_res/css/themes/all-themes.css" rel="stylesheet" />
 </head>

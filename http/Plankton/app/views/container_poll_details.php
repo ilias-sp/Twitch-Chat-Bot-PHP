@@ -173,7 +173,7 @@
                             </h2>
                         </div>
 
-                            <table class="table table-hover">
+                            <table class="table table-hover js-basic-example dataTable">
                                 <thead>
                                     <tr>
                                         <th class="col-xs-4">#</th>
@@ -194,7 +194,7 @@
                             </h2>
                         </div>
 
-                            <table class="table table-hover">
+                            <table class="table table-hover js-basic-example dataTable">
                                 <thead>
                                     <tr>
                                         <th class="col-xs-4">#</th>
