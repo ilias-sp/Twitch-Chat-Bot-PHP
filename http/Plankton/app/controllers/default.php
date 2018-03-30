@@ -44,6 +44,13 @@
             'twitch_channel_name' => $app['model']->get_channel_name()
         );
     },
+    '/twitchstream' => function($app) {
+        return array('twitchstream',
+            'title' => 'Twitch Stream',
+            'route' => 'twitchstream',
+            'twitch_channel_name' => $app['model']->get_channel_name()
+        );
+    },
     '/polls_home' => function($app) {
         return array('polls_home',
             'title' => 'Polls',

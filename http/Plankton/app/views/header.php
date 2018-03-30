@@ -27,6 +27,9 @@
     <!-- JQuery DataTable Css -->
     <link href="/http_res/plugins/jquery-datatable/skin/bootstrap/css/dataTables.bootstrap.css" rel="stylesheet">
 
+    <!-- material-design-iconic-font Css -->
+    <link href="/http_res/plugins/material-design-iconic-font/css/material-design-iconic-font.min.css" rel="stylesheet">
+
     <!-- AdminBSB Themes. You can choose a theme from css/themes instead of get all themes -->
     <link href="/http_res/css/themes/all-themes.css" rel="stylesheet" />
 </head>
@@ -99,6 +102,12 @@
                         <a href="/twitchchat">
                             <i class="material-icons">forum</i>
                             <span>Twitch Chat</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/twitchstream">
+                            <i class="zmdi zmdi-twitch zmdi-hc-2x"></i>
+                            <span>Twitch Stream</span>
                         </a>
                     </li>
                     <li>

@@ -25,6 +25,7 @@
                                 <div class="content">
                                     <div class="text">VIEWERS WITH LOYALTY POINTS</div>
                                     <div class="number">' . $total_count . '</div>
+                                    <div class="text"></div>
                                 </div>
                             </div>
                         </div>
@@ -50,6 +51,7 @@
                         <div class="content">
                             <div class="text">VIEWERS WITH LOYALTY POINTS</div>
                             <div class="number">' . $total_count . '</div>
+                            <div class="text"></div>
                         </div>
                     </div>
                 </div>
@@ -68,6 +70,7 @@
                         <td>' . htmlspecialchars($loyalty_viewer['username'], ENT_QUOTES, 'UTF-8') . '</td>
                         <td>' . $loyalty_viewer['points'] . '</td>
                         <td>' . date('l, d F Y (T), H:i', $loyalty_viewer['last_date_seen']) . '</td>
+                        <td><a href="https://www.twitch.tv/' . htmlspecialchars($loyalty_viewer['username'], ENT_QUOTES, 'UTF-8') . '" target="_blank" title="Visit user\'s Twitch Profile"><i class="zmdi zmdi-twitch zmdi-hc-2x"></i></a></td>
                     </tr>
 ';
                     $current_counter++;
@@ -93,9 +96,10 @@
                                 <thead>
                                     <tr>
                                         <th class="col-xs-2">#</th>
-                                        <th class="col-xs-4">USERNAME</th>
+                                        <th class="col-xs-3">USERNAME</th>
                                         <th class="col-xs-2">LOYALTY POINTS</th>
                                         <th class="col-xs-4">LAST DATE IN CHAT</th>
+                                        <th class="col-xs-1"></th>
                                     </tr>
                                 </thead>
                                 <tbody>

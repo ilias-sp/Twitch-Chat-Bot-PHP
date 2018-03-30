@@ -30,6 +30,12 @@ else if ($route === 'twitchchat')
     render('container_twitchchat', array('twitch_channel_name' => $twitch_channel_name ), false);
     render('footer', array(), false);
 }
+else if ($route === 'twitchstream')
+{
+    render('header', array('title' => $title), false);
+    render('container_twitchstream', array('twitch_channel_name' => $twitch_channel_name ), false);
+    render('footer', array(), false);
+}
 else if ($route === 'polls_home')
 {
     render('header', array('title' => $title), false);
