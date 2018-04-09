@@ -11,7 +11,7 @@
             <iframe class="embed-responsive-item" style="width:100%; height:800px;" frameborder="0"
             scrolling="yes"
             id="chat_embed"
-            src="http://www.twitch.tv/' . $twitch_channel_name . '/chat">
+            src="http://www.twitch.tv/embed/' . $twitch_channel_name . '/chat?darkpopout">
             </iframe>
 ';
 
