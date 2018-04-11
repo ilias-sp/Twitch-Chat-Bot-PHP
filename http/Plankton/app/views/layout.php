@@ -12,6 +12,12 @@ else if ($route === 'config_botcommands')
     render('container_botcommands', array('commands' => $commands ), false);
     render('footer', array(), false);
 }
+else if ($route === 'botcommands_usage')
+{
+    render('header', array('title' => $title), false);
+    render('container_botcommands_usage', array('commands_usage' => $commands_usage ), false);
+    render('footer', array(), false);
+}
 else if ($route === 'config_botperiodicmessages')
 {
     render('header', array('title' => $title), false);

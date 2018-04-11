@@ -23,6 +23,13 @@
             'commands' => $app['model']->get_botcommands()
         );
     },
+    '/commands_usage' => function($app) {
+        return array('botcommands_usage',
+            'title' => 'Bot Commands Usage Statistics',
+            'route' => 'botcommands_usage',
+            'commands_usage' => $app['model']->get_botcommands_usage()
+        );
+    },
     '/config/periodicmessages' => function($app) {
         return array('botperiodicmessages',
             'title' => 'Periodic Messages - Configuration',

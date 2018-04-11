@@ -149,6 +149,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="/commands_usage">
+                            <i class="material-icons">assessment</i>
+                            <span>Commands Usage statistics</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="/help">
                             <i class="material-icons">help</i>
                             <span>Help</span>

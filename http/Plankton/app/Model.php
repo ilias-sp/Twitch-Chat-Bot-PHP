@@ -177,6 +177,25 @@ class Model
 
 	}
 
+	public function get_botcommands_usage()
+	{
+		
+		$appdata_file = $this->appdatadir . '/appdata/bot_commands_usage_stats.cfg';
+
+		if (file_exists($appdata_file)) 
+		{
+			$file_contents = file_get_contents($appdata_file);
+
+			return $file_contents;
+
+		}
+		else
+		{
+			return FALSE;
+		}
+
+	}
+
 	public function get_botperiodic_msgs()
 	{
 		

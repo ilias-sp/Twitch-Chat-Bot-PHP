@@ -123,6 +123,12 @@ special reserved commands that are already configured:
 
 !botinfo: a command to print information about this bot and where people can find it.
 
+# COMMANDS STATISTICS
+Izybot keeps track of all the registered commands being triggered, for you to have some insights on the popularity of your configured commands.
+
+You can view these statistics from the web interface.
+
+![Preview image](preview/commands_usage.png?raw=true "Preview image")
 
 # APPENDIX
 Installing PHP on Windows:

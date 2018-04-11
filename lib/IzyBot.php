@@ -39,6 +39,12 @@ class IzyBot {
     private $duplicate_message_cuttoff_seconds;
     private $bot_responses_last_date;
 
+    // bot commands usage stats:
+    private $bot_commands_usage;
+    private $bot_commands_usage_file;
+    private $bot_commands_usage_flush_to_file_interval_seconds = 60;
+    private $bot_commands_usage_last_date_flushed;
+
     // periodic messages:
     private $periodic_messages_interval_seconds;
     private $periodic_messages;
@@ -140,6 +146,11 @@ class IzyBot {
                                                      $config['giveaway_join_keyword'],
                                                      $this->bot_config['botinfocommand_keyword']
         );
+        
+        // bot commands usage stats:
+        $this->bot_commands_usage_file = 'bot_commands_usage_stats.cfg';
+        $this->bot_commands_usage = array();
+        $this->bot_commands_usage_last_date_flushed = date('U');
 
         // admins:
         $this->admin_usernames_file = 'admin_usernames.cfg';
@@ -322,6 +333,7 @@ class IzyBot {
                 NOMESSAGE:
                 $this->_check_and_send_periodic_message();
                 $this->_check_and_query_loyalty_URL();
+                $this->_check_and_flush_bot_commands_usage();
                 if ($this->active_poll_exists === TRUE)
                 {
                     $this->_monitor_ongoing_poll();
@@ -551,11 +563,6 @@ class IzyBot {
                 $this->_remove_quote($username, $channel, $words_in_message_text, $message_text);
                 return TRUE;
             }
-            elseif ($words_in_message_text[0] === $this->bot_config['quote_keyword'])
-            {
-                $this->_display_quote($username, $channel, $words_in_message_text, $message_text);
-                return TRUE;
-            }
         }
         //
         // commands for admins END 
@@ -564,37 +571,51 @@ class IzyBot {
         if ($message_text === $this->bot_config['helpcommand_keyword'])
         {
             $this->_display_help_command($username, $channel, $words_in_message_text, $message_text);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['helpcommand_keyword']);
             return TRUE;
         }
         elseif ($message_text === $this->bot_config['uptimecommand_keyword'])
         {
             $this->_display_uptime_command($username, $channel, $words_in_message_text, $message_text);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['uptimecommand_keyword']);
             return TRUE;
         }
         elseif ($message_text === $this->bot_config['botinfocommand_keyword'])
         {
             $this->_display_botinfo_command($username, $channel, $words_in_message_text, $message_text);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['botinfocommand_keyword']);
             return TRUE;
         }
         elseif (mb_strtolower($words_in_message_text[0]) === mb_strtolower($this->bot_config['votecommand_keyword']) &&
                 $this->active_poll_exists === TRUE)
         {
             $this->_register_users_vote($username, $channel, $words_in_message_text, $message_text);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['votecommand_keyword']);
             return TRUE;
         }
         elseif ($message_text === $this->bot_config['loyaltypoints_keyword'])
         {
             $this->_display_loyalty_XP_of_viewer($username);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['loyaltypoints_keyword']);
             return TRUE;
         }
         elseif ($message_text === $this->bot_config['giveaway_join_keyword'])
         {
             $this->_giveaway_add_viewer($username);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['giveaway_join_keyword']);
             return TRUE;
         }
         elseif ($message_text === $this->bot_config['quote_keyword'])
         {
             $this->_display_quote($username, $channel, $words_in_message_text, $message_text);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['quote_keyword']);
             return TRUE;
         }
         //
@@ -624,7 +645,9 @@ class IzyBot {
                     }
                     //                       
                     $this->_add_command_to_bot_responses_last_date($command);
-                }                    
+                }
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($command);
                 return TRUE;
             }
         }
@@ -651,7 +674,9 @@ class IzyBot {
                     }
                     //                       
                     $this->_add_command_to_bot_responses_last_date($command);
-                }                    
+                }
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($command);
                 return TRUE;
             }
         }
@@ -777,6 +802,32 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _read_bot_commands_usage()
+    {
+
+        $bot_commands_usage_text = $this->appdatahandler->ReadAppDatafile($this->bot_commands_usage_file, 'READ');
+
+        if ($bot_commands_usage_text[0] === TRUE)
+        {
+            $this->bot_commands_usage = json_decode($bot_commands_usage_text[2], true);
+            if (!is_array($this->bot_commands_usage))
+            {
+                $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Bot commands usage file: ' . $this->bot_commands_usage_file . ' is malformed.');
+                $this->bot_commands_usage = array();
+            }
+        }
+        else
+        {
+            $this->bot_commands_usage = array();
+        }
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Bot commands usage loaded:' . "\n\n" . print_r($this->bot_commands_usage, true) . "\n\n");
+
+        return TRUE;
+
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     private function _read_quotes()
     {
 
@@ -857,11 +908,22 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
+    private function _write_bot_commands_usage()
+    {
+
+        $this->appdatahandler->WriteAppDatafile($this->bot_commands_usage_file, 'appdata', json_encode($this->bot_commands_usage), 'WRITE');
+
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
     public function start_bot()
     {
         $this->_read_admin_commands();
         $this->_read_admin_usernames();
         $this->_read_periodic_messages();
+        $this->_read_bot_commands_usage();
         $this->_read_quotes();
         $this->_read_loyalty_viewers_XP_array();
         //
@@ -873,6 +935,7 @@ class IzyBot {
     public function stop_bot()
     {
         $this->_write_admin_commands();
+        $this->_write_bot_commands_usage();
         //
         return $this;
     }
@@ -1326,6 +1389,22 @@ class IzyBot {
     }
     //----------------------------------------------------------------------------------
     //
+    //----------------------------------------------------------------------------------
+    private function _check_and_flush_bot_commands_usage()
+    {
+        if (date('U') - $this->bot_commands_usage_last_date_flushed > $this->bot_commands_usage_flush_to_file_interval_seconds &&
+            count($this->bot_commands_usage) > 0
+            )
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Time to flush the bot commands usage to file.');
+            $this->_write_bot_commands_usage();
+            $this->bot_commands_usage_last_date_flushed = date('U');
+        }
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
     //----------------------------------------------------------------------------------
     private function _create_poll($username, $channel, $words_in_message_text, $message_text)
     {
@@ -1924,7 +2003,19 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    
+    private function _bot_command_add_usage($bot_command)
+    {
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Adding usage for bot command: ' . $bot_command);
+        
+        if (array_key_exists($bot_command, $this->bot_commands_usage) !== FALSE)
+        {
+            $this->bot_commands_usage[$bot_command]++;
+        }
+        else
+        {
+            $this->bot_commands_usage[$bot_command] = 1;
+        }
+    }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
