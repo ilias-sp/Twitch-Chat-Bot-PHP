@@ -1,9 +1,5 @@
 # Twitch-Chat-Bot-PHP
-This is Izybot! A simple, yet powerful, Twitch Chat bot in PHP.
-
-
-# INTRODUCTION
-Izybot is a basic Twitch Chat bot, to help make streamers life easier. It will assist you by replying any command you will configure it to do with a relevant message.
+This is Izybot! A simple, yet powerful, Twitch Chat bot written in PHP, to help make streamers' life easier. It will assist you by replying any command you will configure it to do with a relevant message.
 
 
 # FEATURES
@@ -18,18 +14,17 @@ Izybot is a basic Twitch Chat bot, to help make streamers life easier. It will a
 On the other hand, Bot was not written to be performing Moderator tasks, at least not yet :)
 
 
-# FAQ
-
-
 # PREREQUISITES
-PHP will be needed on your environment.
-Additionally, you will need a valid Twitch User that the bot will use to authenticate to Twitch. It can be the username of your real account, or another account that you will create to use dedicated for your bot. This account will be the username the rest Twitch users will see in your bot's responses.
+
+- PHP will be needed on your environment.
+- Additionally, you will need a valid Twitch User that the bot will use to authenticate to Twitch. It can be the username of your real account, or another account that you will create to use exclusively from your bot. This account will be the username the rest Twitch users will see in your bot's responses.
 To login to IRC, you will need to obtain an Oath token from Twitch API first. You can obtain it at: https://twitchapps.com/tmi/
 
 
 # INSTALLATION
-download the zip from this repository, and extract its contents to a folder.
-to install PHP on Windows, see APPENDIX.
+Download the zip from this repository, and extract its contents to a folder.
+
+To install PHP on Windows, see [Appendix](#appendix).
 
 
 # CONFIGURATION
@@ -45,7 +40,9 @@ This is for advanced users with PHP knowledge. If you want to use this feature c
 # STARTING THE BOT
 to start the bot, open "cmd" from the folder of the bot and run:
 
+```bash
 php startIzyBot.php
+```
 
 OR, for Windows users, you can use the supplied batch file.
 
@@ -64,64 +61,38 @@ Polls:
 
 ![Preview image](preview/polls.png?raw=true "Preview image")
 
-Viewers Loyalty Points:
-
-![Preview image](preview/loyalty.png?raw=true "Preview image")
-
-
 # ADMIN COMMANDS
-Unless, you have defined otherwise in the startIzyBot.php, the bot supports the below admin reserved commands:
+Unless, you have defined otherwise in the `conf/config.php`, the bot supports the below admin reserved commands:
 
-!addcmd: used to add a new command. the command will be available to all.
-
-!editcmd: used to update the response of an existing command.
-
-!removecmd: used to remove an existing command.
-
-!addadmin: used to add a new username to the admin group. This admin group is not necessarily the same with the Mods. if you want to make a person a Mod to your channel, you will have to explicitly add him to the Bots admin group.
-
-!removeadmin: used to remove a user from the bot's admin group.
-
-!addperiodicmsg: used to add some message to periodically sent out in the chat.
-
-!removeperiodicmsg: used to remove a message from the list of messages periodically sent out in the chat. You need to type the whole sentence that you want to remove, exactly as  is when you see it in chat.
-
-!makepoll: used to create a new poll. Command syntax is expected to be: !makepoll <poll duration in seconds> <free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)>
-
-!cancelpoll: used to cancel the active poll.
-
-!giveaway-start "title": will start the giveaway title. You can optionally add any string as description to the giveaway.
-
-!giveaway-end: will stop the giveaway, throughout it viewers can join the giveaway.
-
-!giveaway-status: check the current status of the giveaway function, and how many viewers have joined.
-
-!giveaway-reset: reset the giveaway. run this before starting a new giveaway. This command will flush the current giveaway's details (title) to file.
-
-!giveaway-winner: have Izybot pick up a winner from the eligible viewers list. You can run this multiple times to select more than one winners.
-
-!addquote: to add a quote.
-
-!removequote: to remove a quote, followed by its numerical ID.
-
-
-# LOYALTY POINTS
-Loyalty points is a virtual currency that is awarded to viewers, according to their presence in the channel. They can use this virtual currency on bets. To enable and configure it, see config.php.
-
-# QUOTES
-Quotes can be added to the bot configuration, and displayed on demand.
+| Command | Purpose |
+| ----------------------- | ----------------------- |
+| !addcmd | used to add a new command. the command will be available to all. |
+| !editcmd | used to update the response of an existing command. |
+| !removecmd | used to remove an existing command. |
+| !addadmin | used to add a new username to the admin group. This admin group is not necessarily the same with the Mods. if you want to make a person a Mod to your channel, you will have to explicitly add him to the Bots admin group. |
+| !removeadmin | used to remove a user from the bot's admin group. |
+| !addperiodicmsg | used to add some message to periodically sent out in the chat. |
+| !removeperiodicmsg | used to remove a message from the list of messages periodically sent out in the chat. You need to type the whole sentence that you want to remove, exactly as-is when you see it in chat. |
+| !makepoll | used to create a new poll. Command syntax is expected to be: !makepoll <poll duration in seconds> <free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)> |
+| !cancelpoll | used to cancel the active poll. |
+| !giveaway-start "title" | will start the giveaway title. You can optionally add any string as description to the giveaway. |
+| !giveaway-end | will stop the giveaway, throughout it viewers can join the giveaway. |
+| !giveaway-status | check the current status of the giveaway function, and how many viewers have joined. |
+| !giveaway-reset | reset the giveaway. run this before starting a new giveaway. This command will flush the current giveaway's details (title) to file. |
+| !giveaway-winner | have Izybot pick up a winner from the eligible viewers list. You can run this multiple times to select more than one winners. |
+| !addquote | to add a quote. |
+| !removequote | to remove a quote, followed by its numerical ID. |
 
 
 # USER COMMANDS
 special reserved commands that are already configured:
 
-!help: will reply the list of available commands for the users (not including the admin commands).,
-
-!uptime: will reply the uptime of the bot. This should not be assumed it is the same as the uptime of the stream (unless you start the bot simultaneously with the stream session).
-
-!quote "ID": to display a specific quote. pass no ID, to display a random quote.
-
-!botinfo: a command to print information about this bot and where people can find it.
+| Command | Purpose |
+| ----------------------- | ----------------------- |
+| !help | will reply the list of available commands for the users (not including the admin commands). |
+| !uptime | will reply the uptime of the bot. This should not be assumed it is the same as the uptime of the stream (unless you start the bot simultaneously with the stream session). |
+| !quote "ID" | to display a specific quote. pass no ID, to display a random quote. |
+| !botinfo | a command to print information about this bot and where people can find it. |
 
 # COMMANDS STATISTICS
 Izybot keeps track of all the registered commands being triggered, for you to have some insights on the popularity of your configured commands.
@@ -129,6 +100,22 @@ Izybot keeps track of all the registered commands being triggered, for you to ha
 You can view these statistics from the web interface.
 
 ![Preview image](preview/commands_usage.png?raw=true "Preview image")
+
+# LOYALTY POINTS
+Loyalty points is a virtual currency that is awarded to viewers, according to their presence in the channel. They can use this virtual currency on bets. To enable and configure it, see config.php.
+
+![Preview image](preview/loyalty.png?raw=true "Preview image")
+
+# QUOTES
+Quotes can be added to the bot configuration, and displayed on demand.
+
+# PLUGINS
+
+Plugins are developed on demand.
+
+| Plugin | Description |
+| ----------------------- | ----------------------- |
+| Voobly | a plugin developed for the Voobly platform, that hosts the Age of Empires 2 RTS game and more. [Check here](documentation/Voobly.md) for instructions on how to enable and configure the plugin. |
 
 # APPENDIX
 Installing PHP on Windows:
@@ -170,19 +157,12 @@ Installing PHP on Windows:
 
 - Installation of PHP is done!
 
-
-# PLUGINS
-
-# VOOBLY PLUGIN
-
-Voobly is a plugin developed for the Voobly platform, that hosts the Age of Empires 2 RTS game and more. [Check here](documentation/Voobly.md) for instructions on how to enable and configure the plugin.
-
-
-
 # 3RD PARTY SOFTWARE USED
 
-IzyBot uses below 3rd open source software:
+IzyBot uses below 3rd party open source software:
 
-- [KLogger](https://github.com/katzgrau/KLogger)
-- [AdminBSB - Material Design Dashboard](https://github.com/gurayyarar/AdminBSBMaterialDesign)
-- [Plankton, a PHP pico framework](https://github.com/Gregwar/Plankton)
+| Library |
+| ----------------------- |
+| [KLogger](https://github.com/katzgrau/KLogger) |
+| [AdminBSB - Material Design Dashboard](https://github.com/gurayyarar/AdminBSBMaterialDesign) |
+| [Plankton, a PHP pico framework](https://github.com/Gregwar/Plankton) |
