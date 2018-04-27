@@ -103,6 +103,25 @@
             'loyalty_details' => $app['model']->get_viewers_loyalty_XP_details()
         );
     },
+    '/history/twitchchat' => function($app) {
+        return array('History - Twitch chat logs',
+            'title' => 'History - Twitch chat logs',
+            'route' => 'history_twitchchat',
+            'log_files' => $app['model']->get_log_files()
+        );
+    },
+    '/history/twitchchat_log_details' => function($app) {
+
+        $parameters = $app['request']['parameters'];
+        $log_filename = isset($parameters['file']) ? $parameters['file'] : NULL;
+
+        return array('History - Twitch chat log details',
+            'title' => 'History - Twitch chat details',
+            'route' => 'history_twitchchat_log_details',
+            'log_filename' => $log_filename,
+            'log_details' => $app['model']->get_log_file_details($log_filename)
+        );
+    },
     '/help' => function($app) {
         return array('help',
             'title' => 'Help',

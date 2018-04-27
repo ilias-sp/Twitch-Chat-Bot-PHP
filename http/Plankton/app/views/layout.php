@@ -79,6 +79,19 @@ else if ($route === 'help')
     render('footer', array(), false);
     render('help_script', array(), false);
 }
+else if ($route === 'history_twitchchat')
+{
+    render('header', array('title' => $title), false);
+    render('container_logs_twitchchat', array('log_files' => $log_files ), false);
+    render('footer', array(), false);
+    render('help_script', array(), false);
+}
+else if ($route === 'history_twitchchat_log_details')
+{
+    render('header', array('title' => $title), false);
+    render('container_log_details', array('log_details' => $log_details, 'log_filename' => $log_filename ), false);
+    render('footer', array(), false);
+}
 else
 {
     // 404:

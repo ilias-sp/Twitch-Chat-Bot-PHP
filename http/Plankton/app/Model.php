@@ -224,6 +224,15 @@ class Model
 		return $config['channel'];
 	}
 
+	public function get_log_files()
+	{
+		$logfiles_dir = $this->appdatadir . '/log';
+
+		$logfiles = $this->get_dir_file_info($logfiles_dir);
+
+		return $logfiles;
+	}
+
 	public function get_poll_files()
 	{
 		$pollfiles_dir = $this->appdatadir . '/polls';
@@ -265,6 +274,25 @@ class Model
 	{
 
 		$appdata_file = $this->appdatadir . '/giveaways/' . $file_name;
+
+		if (file_exists($appdata_file)) 
+		{
+			$file_contents = file_get_contents($appdata_file);
+
+			return $file_contents;
+
+		}
+		else
+		{
+			return FALSE;
+		}
+		
+	}
+
+	public function get_log_file_details($file_name)
+	{
+
+		$appdata_file = $this->appdatadir . '/log/' . $file_name;
 
 		if (file_exists($appdata_file)) 
 		{

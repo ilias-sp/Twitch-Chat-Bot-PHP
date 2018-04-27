@@ -6,7 +6,7 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <title><?php echo $title; ?> | IzyBot, Twitch-Chat-Bot-PHP | A simple, yet powerful, Twitch Chat bot in PHP!</title>
     <!-- Favicon-->
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&subset=latin,cyrillic-ext" rel="stylesheet" type="text/css">
@@ -153,6 +153,17 @@
                             <i class="material-icons">assessment</i>
                             <span>Commands Usage statistics</span>
                         </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="menu-toggle">
+                            <i class="material-icons">history</i>
+                            <span>History</span>
+                        </a>
+                        <ul class="ml-menu">
+                            <li>
+                                <a href="/history/twitchchat">Twitch Chat logs</a>
+                            </li>
+                        </ul>
                     </li>
                     <li>
                         <a href="/help">
