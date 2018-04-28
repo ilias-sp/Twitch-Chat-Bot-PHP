@@ -100,25 +100,25 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 
 | Command | Purpose |
 | ----------------------- | ----------------------- |
-| !makepoll | used to create a new poll. Command syntax is expected to be: !makepoll &lt;poll duration in seconds&gt; &lt;free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)&gt; |
-| !cancelpoll | used to cancel the active poll. |
+| !makepoll &lt;poll duration&gt; &lt;poll description&gt; | Used to create a new poll. Command syntax is expected to be: !makepoll &lt;poll duration in seconds&gt; &lt;free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)&gt; |
+| !cancelpoll | Used to cancel the active poll. |
 
 - Quotes:
 
 | Command | Purpose |
 | ----------------------- | ----------------------- |
-| !addquote | to add a quote. |
-| !removequote | to remove a quote, followed by its numerical ID. |
+| !addquote | To add a quote. |
+| !removequote | To remove a quote, followed by its numerical ID. |
 
 - Giveaways:
 
 | Command | Purpose |
 | ----------------------- | ----------------------- |
-| !giveaway-start "title" | will start the giveaway title. You can optionally add any string as description to the giveaway. |
-| !giveaway-end | will stop the giveaway, throughout it viewers can join the giveaway. |
-| !giveaway-status | check the current status of the giveaway function, and how many viewers have joined. |
-| !giveaway-reset | reset the giveaway. run this before starting a new giveaway. This command will flush the current giveaway's details (title) to file. |
-| !giveaway-winner | have Izybot pick up a winner from the eligible viewers list. You can run this multiple times to select more than one winners. |
+| !giveaway-start &lt;title&gt; | Will start the giveaway title. You can optionally add any string as description to the giveaway. |
+| !giveaway-end | Will stop the giveaway, throughout it viewers can join the giveaway. |
+| !giveaway-status | Check the current status of the giveaway function, and how many viewers have joined. |
+| !giveaway-reset | Reset the giveaway. run this before starting a new giveaway. This command will flush the current giveaway's details (title) to file. |
+| !giveaway-winner | Have Izybot pick up a winner from the eligible viewers list. You can run this multiple times to select more than one winners. |
 
 - Bets:
 
@@ -131,7 +131,7 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 
 # USER COMMANDS
 
-Special reserved commands that are already configured:
+- Special reserved commands that are already configured:
 
 | Command | Purpose |
 | ----------------------- | ----------------------- |
