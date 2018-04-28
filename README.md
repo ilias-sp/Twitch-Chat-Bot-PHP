@@ -7,15 +7,15 @@ This is Izybot! A simple, yet powerful, Twitch Chat bot written in PHP, to help 
 
 |  |
 | ----------------------- |
-| Runs locally on your PC, making you completely independent of 3rd party websites/software etc. Requires only PHP installed on your PC. |
-| Bot's commands management via Twitch Chat. Bot commands are special keywords users type in chat, that Izybot has to reply with the respective admin's configured response. |
-| Periodic messages initiated by the bot. Can be used to promote streamer's social media etc. |
-| Quotes. |
-| Polls. Create polls for the viewers and the bot will collect their votes. |
-| Giveaways. Create giveaways for the viewers, let them participate, and in the end have the bot pick winners randomly from the generated list. |
-| Loyalty Points. Streamer can enable this feature to award his viewers with virtual currency points. |
-| Bets. Viewers can use their virtual currency points to place bets on a event the streamer decides to (e.g. the outcome of an upcoming game). |
-| Commands usage statistics. Find out which commands are the most popular among your viewers, and which are not. |
+| **Runs locally on your PC**, making you completely independent of 3rd party websites/software etc. Requires only PHP installed on your PC. |
+| **Bot commands** management via Twitch Chat. Bot commands are special keywords users type in chat, that Izybot has to reply with the respective admin's configured response. |
+| **Periodic messages** initiated by the bot. Can be used to promote streamer's social media etc. |
+| **Quotes**. |
+| **Polls**. Create polls for the viewers and the bot will collect their votes. |
+| **Giveaways**. Create giveaways for the viewers, let them participate, and in the end have the bot pick winners randomly from the generated list. |
+| **Loyalty Points**. Streamer can enable this feature to award his viewers with virtual currency points. |
+| **Bets**. Viewers can use their virtual currency points to place bets on a event the streamer decides to (e.g. the outcome of an upcoming game). |
+| **Commands usage statistics**. Find out which commands are the most popular among your viewers, and which are not. |
 
 On the other hand, Bot was not written to be performing Moderator tasks, at least not yet :)
 
@@ -85,30 +85,35 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 - Bot's administrators management:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !addadmin | used to add a new username to the admin group. This admin group is not necessarily the same with the Mods. if you want to make a person a Mod to your channel, you will have to explicitly add him to the Bots admin group. |
 | !removeadmin | used to remove a user from the bot's admin group. |
 
 - Periodic messages management:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !addperiodicmsg | used to add some message to periodically sent out in the chat. |
 | !removeperiodicmsg | used to remove a message from the list of messages periodically sent out in the chat. You need to type the whole sentence that you want to remove, exactly as-is when you see it in chat. |
 
 - Polls:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !makepoll | used to create a new poll. Command syntax is expected to be: !makepoll &lt;poll duration in seconds&gt; &lt;free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)&gt; |
 | !cancelpoll | used to cancel the active poll. |
 
 - Quotes:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !addquote | to add a quote. |
 | !removequote | to remove a quote, followed by its numerical ID. |
 
 - Giveaways:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !giveaway-start "title" | will start the giveaway title. You can optionally add any string as description to the giveaway. |
 | !giveaway-end | will stop the giveaway, throughout it viewers can join the giveaway. |
 | !giveaway-status | check the current status of the giveaway function, and how many viewers have joined. |
@@ -118,6 +123,7 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 - Bets:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !startbet &lt;bet duration&gt; &lt;bet description&gt; | Start a new bet. Define the duration in seconds that the bot will accept bets, and a clear description of the options your viewers can choose from. |
 | !endbet &lt;winning option&gt; | End the active bet. Provide also the winning option for the bot to award the viewers who bet on that option, and deduct the amount from the viewers who lost. |
 | !cancelbet | Cancel the ongoing bet, refund the viewers who had already placed a bet. |
@@ -137,26 +143,31 @@ Special reserved commands that are already configured:
 - Quotes:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !quote &lt;quote id&gt; | Request the bot to reply with the relevant quote from its quote database. |
 
 - Polls:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !vote &lt;option&gt; | Participate in the active poll, providing the desired &lt;option&gt;. Options accepted have to be in numerical format. |
 
 - Giveaways:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !giveaway | Command the viewer sends to join the ongoing giveaway. |
 
 - Loyalty Points:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !izyeuros | Request the bot to reply with the Loyalty Points (virtual currenty) the viewer has accumulated over time in streamer's chat. |
 
 - Bets:
 
 | Command | Purpose |
+| ----------------------- | ----------------------- |
 | !bet &lt;option&gt; &lt;LP amount&gt; | Place a bet, to option &lt;option&gt; for &lt;LP amount&gt; LP points. |
 
 
