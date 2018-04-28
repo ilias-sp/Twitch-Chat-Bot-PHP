@@ -242,6 +242,34 @@ class Model
 		return $pollfiles;
 	}
 
+	public function get_bet_files()
+	{
+		$betfiles_dir = $this->appdatadir . '/bets';
+
+		$betfiles = $this->get_dir_file_info($betfiles_dir);
+
+		return $betfiles;
+	}
+
+	public function get_bet_file_details($file_name)
+	{
+
+		$appdata_file = $this->appdatadir . '/bets/' . $file_name;
+
+		if (file_exists($appdata_file)) 
+		{
+			$file_contents = file_get_contents($appdata_file);
+
+			return $file_contents;
+
+		}
+		else
+		{
+			return FALSE;
+		}
+		
+	}
+
 	public function get_poll_file_details($file_name)
 	{
 

@@ -104,6 +104,11 @@
 
                         </div>
                     </div>
+
+                    <div class="alert alert-info">
+                        <a href="/history/twitchchat" class="btn btn-default btn-lg waves-effect">BACK TO LOGS HOME</a>
+                    </div>
+
                 </div>
 ';
 

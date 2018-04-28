@@ -77,6 +77,25 @@
             'poll_details' => $app['model']->get_poll_file_details($poll_filename)
         );
     },
+    '/bets_home' => function($app) {
+        return array('bets_home',
+            'title' => 'Bets',
+            'route' => 'bets_home',
+            'bet_files' => $app['model']->get_bet_files()
+        );
+    },
+    '/bet_details' => function($app) {
+
+        $parameters = $app['request']['parameters'];
+        $bet_filename = isset($parameters['file']) ? $parameters['file'] : NULL;
+
+        return array('bet_details',
+            'title' => 'Bet Details',
+            'route' => 'bet_details',
+            'bet_filename' => $bet_filename,
+            'bet_details' => $app['model']->get_bet_file_details($bet_filename)
+        );
+    },
     '/giveaways_home' => function($app) {
         return array('giveaways_home',
             'title' => 'Giveaways',

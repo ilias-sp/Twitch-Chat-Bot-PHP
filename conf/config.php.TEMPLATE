@@ -75,11 +75,24 @@ $config['new_poll_announcement_message'] = 'New poll is running';
 $config['poll_closure_announcement_message'] = 'Poll was closed.';
 
 
+// Bets config:
+//
+$config['admin_startbet_keyword'] = '!startbet';
+$config['admin_endbet_keyword'] = '!endbet';
+$config['admin_cancelbet_keyword'] = '!cancelbet';
+$config['bet_place_keyword'] = '!bet';
+$config['bet_maximum_allowed_amount'] = 1000; // 0 for unlimited max amount
+$config['betstart_announcement_message'] = 'Bet is open!';
+$config['betend_announcement_message'] = 'Bet has ended.';
+$config['bet_accept_period_over_announcement_message'] = 'Bet period is over, no more bets will be accepted.';
+
+
 // loyalty config:
 // 
 // how many points a viewers is awarded per check interval. if you set it to 0, feature is disabled:
 $config['loyalty_points_per_interval'] = 10;
 $config['loyalty_currency'] = 'IzyEuro';
 $config['loyalty_check_interval'] = 120; // in seconds
+$config['loyalty_points_welcome_award'] = 1000; // amount of LP awarded to new viewers
 
 $config['loyaltypoints_keyword'] = '!izyeuros';

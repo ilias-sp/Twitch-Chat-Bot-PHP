@@ -20,7 +20,7 @@
                         <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-6 col-sm-6 col-xs-12">
                             <div class="info-box bg-cyan info-box hover-zoom-effect">
                                 <div class="icon">
-                                    <i class="material-icons">build</i>
+                                    <i class="material-icons">stars</i>
                                 </div>
                                 <div class="content">
                                     <div class="text">VIEWERS WITH LOYALTY POINTS</div>
@@ -46,7 +46,7 @@
                 <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-6 col-sm-6 col-xs-12">
                     <div class="info-box bg-cyan info-box hover-zoom-effect">
                         <div class="icon">
-                            <i class="material-icons">build</i>
+                            <i class="material-icons">stars</i>
                         </div>
                         <div class="content">
                             <div class="text">VIEWERS WITH LOYALTY POINTS</div>
@@ -124,12 +124,12 @@
                             </h2>
                         </div>
                         <div class="body">
-                            <div class="alert alert-success">
+                            <div class="alert alert-success" style="line-height: 2em;">
                                 <ul>
                                  <li>Loyalty points are points awarded to viewers for being present in your channel/chat. They can be used when you place a bet for an upcoming event (for example, the result of a game you are about to play).</li>
-                                 <li>To enable the Loyalty points, you need to configure the parameters under "loyalty config" section in conf/config.php file. By setting a greater than zero value to the $config['loyalty_points_per_interval'], the feature is enabled.
-                                 </li>
-                                 <li>the database of viewers and their points, is stored in appdata/loyalty_viewers_XP_array.cfg file. It is recommended you backup this file periodically, after each stream.</li>
+                                 <li>To enable the Loyalty points, you need to configure the parameters under "loyalty config" section in conf/config.php file. By setting a greater than zero value to the <b>$config['loyalty_points_per_interval']</b>, the feature is enabled.</li>
+                                 <li>You can welcome new users to your chat by giving them a welcome bonus amount of points. Check the <b>$config['loyalty_points_welcome_award']</b> in the conf/config.php file.</li>
+                                 <li>The database of viewers and their points, is stored in appdata/loyalty_viewers_XP_array.cfg file. It is recommended you backup this file periodically, after each stream.</li>
                                  </ul>
                             </div>
                         </div>

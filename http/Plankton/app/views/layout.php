@@ -54,6 +54,18 @@ else if ($route === 'poll_details')
     render('container_poll_details', array('poll_details' => $poll_details, 'poll_filename' => $poll_filename ), false);
     render('footer', array(), false);
 }
+else if ($route === 'bets_home')
+{
+    render('header', array('title' => $title), false);
+    render('container_bets_home', array('bet_files' => $bet_files ), false);
+    render('footer', array(), false);
+}
+else if ($route === 'bet_details')
+{
+    render('header', array('title' => $title), false);
+    render('container_bet_details', array('bet_details' => $bet_details, 'bet_filename' => $bet_filename ), false);
+    render('footer', array(), false);
+}
 else if ($route === 'giveaways_home')
 {
     render('header', array('title' => $title), false);
@@ -77,14 +89,13 @@ else if ($route === 'help')
     render('header', array('title' => $title), false);
     render('container_help', array(), false);
     render('footer', array(), false);
-    render('help_script', array(), false);
+    // render('help_script', array(), false);
 }
 else if ($route === 'history_twitchchat')
 {
     render('header', array('title' => $title), false);
     render('container_logs_twitchchat', array('log_files' => $log_files ), false);
     render('footer', array(), false);
-    render('help_script', array(), false);
 }
 else if ($route === 'history_twitchchat_log_details')
 {

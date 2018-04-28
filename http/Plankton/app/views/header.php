@@ -132,8 +132,14 @@
                     </li>
                     <li>
                         <a href="/loyaltypoints">
-                            <i class="material-icons">monetization_on</i>
+                            <i class="material-icons">stars</i>
                             <span>Loyalty Points</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/bets_home">
+                            <i class="material-icons">monetization_on</i>
+                            <span>Bets</span>
                         </a>
                     </li>
                     <li>

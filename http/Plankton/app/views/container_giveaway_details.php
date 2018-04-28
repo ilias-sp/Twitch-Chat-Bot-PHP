@@ -200,6 +200,11 @@
 
                         </div>
                     </div>
+
+                    <div class="alert alert-info">
+                        <a href="/giveaways_home" class="btn btn-default btn-lg waves-effect">BACK TO GIVEAWAYS HOME</a>
+                    </div>
+                    
                 </div>
 ';
 

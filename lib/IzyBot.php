@@ -63,6 +63,16 @@ class IzyBot {
     private $poll_deadline_timestamp;
     private $poll_duration;
 
+    // bets:
+    private $bet_description = '';
+    private $bet_currently_running = FALSE;
+    private $bet_currently_accepting = FALSE;
+    private $bets_array = array();
+    private $bet_start_time;
+    private $bet_end_time;
+    private $bet_accept_end_time;
+    private $bet_winning_option;
+
     // giveaway:
     private $giveaway_currently_enabled;
     private $giveaway_viewers_list;
@@ -144,6 +154,10 @@ class IzyBot {
                                                      $config['admin_removequote_keyword'],
                                                      $config['quote_keyword'],
                                                      $config['giveaway_join_keyword'],
+                                                     $config['admin_startbet_keyword'],
+                                                     $config['admin_endbet_keyword'],
+                                                     $config['admin_cancelbet_keyword'],
+                                                     $config['bet_place_keyword'],
                                                      $this->bot_config['botinfocommand_keyword']
         );
         
@@ -174,7 +188,9 @@ class IzyBot {
         $this->active_poll_exists = FALSE;
         $this->votes_array = array();
         $this->poll_help_message = $config['poll_help_message'];
-        
+
+        // bets:
+
         // giveaway:
         $this->giveaway_currently_enabled = FALSE;
         $this->giveaway_viewers_list = array();
@@ -337,6 +353,10 @@ class IzyBot {
                 if ($this->active_poll_exists === TRUE)
                 {
                     $this->_monitor_ongoing_poll();
+                }
+                if ($this->bet_currently_accepting === TRUE)
+                {
+                    $this->_monitor_ongoing_bet();
                 }
                 sleep(1);
             }
@@ -563,6 +583,35 @@ class IzyBot {
                 $this->_remove_quote($username, $channel, $words_in_message_text, $message_text);
                 return TRUE;
             }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_startbet_keyword'])
+            {
+                $this->_start_bet($username, $channel, $words_in_message_text, $message_text);
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_endbet_keyword'])
+            {
+                $this->_end_bet($username, $channel, $words_in_message_text, $message_text);
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_cancelbet_keyword'])
+            {
+                $this->_cancel_bet($username, $channel, $words_in_message_text, $message_text);
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['bet_place_keyword'])
+            {
+                $this->_register_bet($username, $channel, $words_in_message_text, $message_text);
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($this->bot_config['bet_place_keyword']);
+                return TRUE;
+            }
+            elseif ($message_text === $this->bot_config['loyaltypoints_keyword'])
+            {
+                $this->_display_loyalty_XP_of_viewer($username);
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($this->bot_config['loyaltypoints_keyword']);
+                return TRUE;
+            }
         }
         //
         // commands for admins END 
@@ -602,6 +651,13 @@ class IzyBot {
             $this->_display_loyalty_XP_of_viewer($username);
             // add the bot command to usage:
             $this->_bot_command_add_usage($this->bot_config['loyaltypoints_keyword']);
+            return TRUE;
+        }
+        elseif ($message_text === $this->bot_config['bet_place_keyword'])
+        {
+            $this->_register_bet($username, $channel, $words_in_message_text, $message_text);
+            // add the bot command to usage:
+            $this->_bot_command_add_usage($this->bot_config['bet_place_keyword']);
             return TRUE;
         }
         elseif ($message_text === $this->bot_config['giveaway_join_keyword'])
@@ -1259,9 +1315,6 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     private function _display_quote($username, $channel, $words_in_message_text, $message_text)
     {
-        //
-        
-
         if ($this->_check_response_should_be_silenced($this->bot_config['quote_keyword']) === FALSE)
         {
             // check if quote # was included:
@@ -1493,6 +1546,20 @@ class IzyBot {
                 return FALSE;
             }
         }
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _monitor_ongoing_bet()
+    {
+        if ($this->bet_accept_end_time <= date('U'))
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Bets acceptance period is over, no more accepting bets.');
+            $this->bet_currently_accepting = FALSE;
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['bet_accept_period_over_announcement_message']);
+        }
+        //
+        return TRUE;
     }
     //----------------------------------------------------------------------------------
     //
@@ -1945,10 +2012,10 @@ class IzyBot {
         if ($key_for_username === FALSE)
         {
             // new username:
-            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Username: ' . $username . ' was not found in loyalty_viewers_XP array. Adding it..');
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Username: ' . $username . ' was not found in loyalty_viewers_XP array. Adding it with welcome award');
 
             $this->loyalty_viewers_XP_array[] = array( 'username' => $username,
-                'points' => $this->loyalty_points_per_interval,
+                'points' => $this->bot_config['loyalty_points_welcome_award'] + $this->loyalty_points_per_interval,
                 'last_date_seen' => date('U')
             );
         }
@@ -2019,15 +2086,280 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    
+    private function _cancel_bet()
+    {
+        if ($this->bet_currently_running === TRUE)
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Cancelling the bet');
+            $this->_write_bet_results('Cancelled');
+
+            // reset vars:
+            $this->bet_description = '';
+            $this->bet_currently_running = FALSE;
+            $this->bet_currently_accepting = FALSE;
+            $this->bets_array = array();
+            $this->bet_start_time = NULL;
+            $this->bet_end_time = NULL;
+            $this->bet_accept_end_time = NULL;
+            $this->bet_winning_option = NULL;
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : The bet was cancelled. Viewers were refunded their bets.');
+        }
+        else
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'There is no active bet to cancel.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : There is no active bet to cancel.');
+        }
+
+        //
+        return TRUE;
+    }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    
+    private function _start_bet($username, $channel, $words_in_message_text, $message_text)
+    {
+        if ($this->bet_currently_running === TRUE)
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'There is already an active bet, cant start another one.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Cannot start a bet, there is already an active one.');
+        }
+        else
+        {            
+            if (count($words_in_message_text) < 3)
+            {
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : To start a bet, use: ' . $this->bot_config['admin_startbet_keyword'] . ' <duration in seconds to accept bets> <bet description>');
+                return FALSE;
+            }
+            else
+            {
+                if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) != 1)
+                {
+                    $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : To start a bet, use: ' . $this->bot_config['admin_startbet_keyword'] . ' <duration in seconds to accept bets> <bet description>');
+                    return FALSE;
+                }
+                $this->bet_accept_end_time = date('U') + $words_in_message_text[1];
+                //
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Starting a new bet: ' . implode(' ', array_slice($words_in_message_text, 1)) . '.');
+                $this->bet_currently_running = TRUE;
+                $this->bet_currently_accepting = TRUE;
+                $this->bets_array = array();
+                $this->bet_description = implode(' ', array_slice($words_in_message_text, 1));
+                $this->bet_start_time = date('U');
+                //
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['betstart_announcement_message'] . ': ' . implode(' ', array_slice($words_in_message_text, 2)) . ' for the next ' . $words_in_message_text[1] . ' seconds. To vote type: ' . $this->bot_config['bet_place_keyword'] . ' followed by the option of your choice and the amount you want to bet. For example: ' . $this->bot_config['bet_place_keyword'] . ' 2 400');
+            }
+        }
+        //
+        return TRUE;
+    }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    
+    private function _end_bet($username, $channel, $words_in_message_text, $message_text)
+    {
+        if ($this->bet_currently_running === FALSE)
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'There is no active bet to stop.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : There is no active bet to stop.');
+        }
+        else
+        {            
+            if (count($words_in_message_text) === 1)
+            {
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : To end the bet, type: ' . $this->bot_config['admin_endbet_keyword'] . ' <winning option in numerical format>');
+            }
+            else
+            {
+                if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) === 1)
+                {
+                    $this->bet_winning_option = $words_in_message_text[1];
+
+                    // stats initialization:
+                    $stats_total_bets = 0;
+                    $stats_winners_total = 0;
+                    $stats_losers_total = 0;
+                    $stats_total_bet_amount = 0;
+                    $stats_total_bet_won_amount = 0;
+                    $stats_total_bet_lost_amount = 0;
+                    
+                    $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Stopping the bet, winning option: ' . $this->bet_winning_option);
+                    $this->bet_currently_running = FALSE;
+                    $this->bet_end_time = date('U');
+                    //
+                    // parse the bets_array, award viewers
+                    foreach ($this->bets_array as $bet)
+                    {
+                        $stats_total_bet_amount += $bet['amount'];
+                        $stats_total_bets++;
+
+                        $key_for_username = array_search($username, array_column($this->loyalty_viewers_XP_array, 'username'));
+                        if ($key_for_username === FALSE)
+                        {
+                            $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Could not process the bet for username: ' . $username . ', username not found in loyalty points array (shouldnt have happened!).');
+                            GOTO ENDOFBETPROCESSINGLOOP;
+                        }
+                        //                        
+                        if ($bet['option'] === $this->bet_winning_option)
+                        {
+                            $this->loyalty_viewers_XP_array[$key_for_username]['points'] = $this->loyalty_viewers_XP_array[$key_for_username]['points'] + $bet['amount'];
+                            $stats_winners_total++;
+                            $stats_total_bet_won_amount += $bet['amount'];
+                            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Bet processed for username: ' . $username . ', he/she WON: ' . $bet['amount'] . ', new LP amount: ' . $this->loyalty_viewers_XP_array[$key_for_username]['points']);
+                        }
+                        else
+                        {
+                            $this->loyalty_viewers_XP_array[$key_for_username]['points'] = $this->loyalty_viewers_XP_array[$key_for_username]['points'] - $bet['amount'];
+                            $stats_losers_total++;
+                            $stats_total_bet_lost_amount += $bet['amount'];
+                            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Bet processed for username: ' . $username . ', he/she LOST: ' . $bet['amount'] . ', new LP amount: ' . $this->loyalty_viewers_XP_array[$key_for_username]['points']);
+                        }
+                        ENDOFBETPROCESSINGLOOP:
+                    }
+                    $bet_single_plural = ($stats_total_bets > 1 || $stats_total_bets === 0) ? 'bets' : 'bet';
+                    $winners_single_plural = ($stats_winners_total > 1 || $stats_winners_total === 0) ? 'winners' : 'winner';
+                    $losers_single_plural = ($stats_losers_total > 1 || $stats_losers_total === 0) ? 'viewers' : 'viewer';
+                    //
+                    //
+                    $this->_write_bet_results('Completed',
+                    $stats_total_bets,
+                    $stats_winners_total,
+                    $stats_losers_total,
+                    $stats_total_bet_amount,
+                    $stats_total_bet_won_amount,
+                    $stats_total_bet_lost_amount
+                    );
+                    // reset vars:
+                    $this->bet_description = '';
+                    $this->bet_currently_running = FALSE;
+                    $this->bet_currently_accepting = FALSE;
+                    $this->bets_array = array();                    
+                    $this->bet_start_time = NULL;
+                    $this->bet_end_time = NULL;
+                    $this->bet_accept_end_time = NULL;
+                    $this->bet_winning_option = NULL;
+                    //
+                    $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['betend_announcement_message'] . ' There were ' . $stats_total_bets . ' ' . $bet_single_plural . ' in total placed, for a total bet amount of: ' . $stats_total_bet_amount . ' ' . $this->loyalty_currency . '. We had ' . $stats_winners_total . ' '  . $winners_single_plural . ' who earned a total of ' . $stats_total_bet_won_amount . ' ' . $this->loyalty_currency . ', and ' . $stats_losers_total . ' ' . $losers_single_plural . ' who had to say goodbye to a total of ' . $stats_total_bet_lost_amount . ' ' . $this->loyalty_currency . '.');
+                }
+                else
+                {
+                    $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : To end the bet, you need to provide the winning option in numerical format.' );
+                }
+            }
+            
+        }
+
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _write_bet_results($bet_status, 
+    $stats_total_bets = 'N/A',
+    $stats_winners_total = 'N/A',
+    $stats_losers_total = 'N/A',
+    $stats_total_bet_amount = 'N/A',
+    $stats_total_bet_won_amount = 'N/A',
+    $stats_total_bet_lost_amount = 'N/A'
+    )
+    {
+        $bet_results_file = 'Bet_results__' . date('Ymd_H_i') . '.txt';
+
+        $bet_results_array = array( 'Bet description' => $this->bet_description,
+            'Bet closure status' => $bet_status,
+            'Total Bets count' => $stats_total_bets,
+            'Winners count' => $stats_winners_total,
+            'Losers count' => $stats_losers_total,
+            'Total bet amount' => $stats_total_bet_amount,
+            'Total bets won amount' => $stats_total_bet_won_amount,
+            'Total bets lost amount' => $stats_total_bet_lost_amount,
+            'Bets' => $this->bets_array,
+            'Bet start date' => $this->bet_start_time,
+            'Bet end date' => $this->bet_end_time,
+            'Bet winning option' => $this->bet_winning_option            
+        );
+
+        $this->appdatahandler->WriteAppDatafile($bet_results_file, 'bets', json_encode($bet_results_array), 'WRITE');
+
+        //
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _register_bet($username, $channel, $words_in_message_text, $message_text)
+    {
+        if ($this->bet_currently_running === TRUE && $this->bet_currently_accepting === TRUE)
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Processing vote from user: ' . $username);
+            if (count($words_in_message_text) != 3)
+            {
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Request is malformed, rejecting it.');
+                return FALSE;
+            }
+            //
+            if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) != 1)
+            {
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Request is malformed (not numeric option), rejecting it.');
+                return FALSE;
+            }
+            $betting_option = $words_in_message_text[1];
+            //
+            if (preg_match('/^[0-9]+$/', $words_in_message_text[2], $matches) != 1)
+            {
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Request is malformed (not numeric amount to bet), rejecting it.');
+                return FALSE;
+            }
+            $betting_amount = $words_in_message_text[2];
+            //
+            if (array_search($username, array_column($this->bets_array, 'username')) != FALSE)
+            {
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'User has already voted. rejecting new vote.');
+                return FALSE;
+            }
+            //
+            if ($this->bot_config['bet_maximum_allowed_amount'] > 0)
+            {
+                if ($betting_amount > $this->bot_config['bet_maximum_allowed_amount'])
+                {
+                    $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'betting amount: ' . $betting_amount . ' is greater than max allowed. Rejecting it.');
+                    $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : @' . $username . ', you can bet up to ' . $this->bot_config['bet_maximum_allowed_amount'] . ' ' . $this->loyalty_currency . '.' );
+                    return FALSE;
+                }
+            }
+            //
+            if (array_search($username, array_column($this->loyalty_viewers_XP_array, 'username')) === FALSE)
+            {
+                // user not found in loyalty points array
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'User not found in loyalty_viewers_XP_array. rejecting new vote.');
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : @' . $username . ', you have no ' . $this->loyalty_currency . ' to bet.' );
+                return FALSE;
+            }
+            //
+            $key_for_username = array_search($username, array_column($this->loyalty_viewers_XP_array, 'username'));
+
+            if ($this->loyalty_viewers_XP_array[$key_for_username]['points'] < $betting_amount)
+            {
+                // user not enoung LP
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'User has not enough LP. Requested: ' . $betting_amount . ', has: ' . $this->loyalty_viewers_XP_array[$key_for_username]['points'] . '. rejecting new vote.');
+                $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : @' . $username . ', you have ' . $this->loyalty_viewers_XP_array[$key_for_username]['points'] . ' ' . $this->loyalty_currency . ', which is not enough to place the bet you requested.' );
+                return FALSE;
+            }
+            else
+            {
+                // placing the bet:
+                $this->bets_array[] = array ('username' => $username,
+                    'amount' => $betting_amount,
+                    'option' => $betting_option,
+                    'bet_date' => date('U')
+                );
+                $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Requested: ' . $betting_amount . ', has: ' . $this->loyalty_viewers_XP_array[$key_for_username]['points'] . '. bet was placed.');
+                // no response to user
+            }
+        }
+        //
+        return TRUE;
+    }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------

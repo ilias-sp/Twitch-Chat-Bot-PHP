@@ -1,29 +1,27 @@
 <section class="content">
         <div class="container-fluid">
             <div class="block-header">
-                <h2>Commands Usage statistics</h2>
+                <h2>Bets</h2>
             </div>
 
             <?php
-
-            $bot_commands_usage = json_decode($commands_usage, true);
 
             $table_text = '';
             $widget_text = '';
             $total_count = 0;
 
-            if (!is_array($bot_commands_usage))
+            if (!is_array($bet_files))
             {
                 // file not found or malformed:
                 $widget_text = '
                     <div class="row clearfix">
                         <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-6 col-sm-6 col-xs-12">
-                            <div class="info-box bg-cyan info-box hover-zoom-effect">
+                            <div class="info-box bg-pink info-box hover-zoom-effect">
                                 <div class="icon">
-                                    <i class="material-icons">build</i>
+                                    <i class="material-icons">monetization_on</i>
                                 </div>
                                 <div class="content">
-                                    <div class="text">COMMANDS</div>
+                                    <div class="text">BETS</div>
                                     <div class="number">' . $total_count . '</div>
                                 </div>
                             </div>
@@ -38,17 +36,17 @@
 
                 // prepare widget:
 
-                $total_count = count($bot_commands_usage);
+                $total_count = count($bet_files);
 
                 $widget_text = '
             <div class="row clearfix">
                 <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-6 col-sm-6 col-xs-12">
-                    <div class="info-box bg-cyan info-box hover-zoom-effect">
+                    <div class="info-box bg-pink info-box hover-zoom-effect">
                         <div class="icon">
-                            <i class="material-icons">build</i>
+                            <i class="material-icons">monetization_on</i>
                         </div>
                         <div class="content">
-                            <div class="text">COMMANDS</div>
+                            <div class="text">BETS</div>
                             <div class="number">' . $total_count . '</div>
                         </div>
                     </div>
@@ -57,16 +55,17 @@
 
 ';
                 // prepare table:
-                ksort($bot_commands_usage);
+                arsort($bet_files);
 
                 $current_counter = 1;
-                foreach ($bot_commands_usage as $bot_command => $bot_command_usage)
+                foreach ($bet_files as $bet_file_info)
                 {
                     $table_text .= '
                     <tr>
                         <th scope="row">' . $current_counter . '</th>
-                        <td>' . htmlspecialchars($bot_command, ENT_QUOTES, 'UTF-8') . '</td>
-                        <td>' . htmlspecialchars($bot_command_usage, ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars($bet_file_info['name'], ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . date('l, d F Y (T), H:i', $bet_file_info['date']) . '</td>
+                        <td><a href="/bet_details?file=' . $bet_file_info['name'] . '">Details</a></td>
                     </tr>
 ';
                     $current_counter++;
@@ -83,7 +82,7 @@
                     <div class="card">
                         <div class="header">
                             <h2>
-                                Commands Usage
+                                Bets
                                 <small>&nbsp;</small>
                             </h2>
                         </div>
@@ -92,8 +91,9 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>COMMAND</th>
-                                        <th>USAGE (COUNT)</th>
+                                        <th>FILE NAME</th>
+                                        <th>DATE</th>
+                                        <th>&nbsp;</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -114,13 +114,18 @@
                     <div class="card">
                         <div class="header">
                             <h2>
-                                HELP - About Commands Usage
+                                HELP - About Bets
                             </h2>
                         </div>
                         <div class="body">
-                            <div class="alert alert-info" style="line-height: 2em;">
+                            <div class="alert alert-success" style="line-height: 2em;">
                                 <ul>
-                                 <li>In this tab, you can see the statistics of your bot's commands, how many times each command was requested in your chat.</li>
+                                    <li>For users to be able to place bets, they need Loyalty Points. To turn on the LP, check <a href="/loyaltypoints">Loyalty Points help</a>.</li>
+                                    <li>To start a bet, you should provide a clear description to your viewers, for them to choose their desired option and the amount of LP points to bet.</li>
+                                    <li>The bot accepts only numerical options to bet, you will need to guide your viewers in choosing a numerical value as the option to bet</li>
+                                    <li>The &lt;start bet&gt; command, should be structured as follows: &lt;start bet keyword you have defined&gt; &lt;period in seconds when users are allowed to bet&gt; &lt;bet description&gt;.</li>
+                                    <li>The &lt;end bet&gt; command, should be structured as follows: &lt;end bet keyword you have defined&gt; &lt;winning option&gt;.</li>
+                                    <li>You can use the &lt;cancel bet&gt; command to cancel an active bet. The users who had already placed a bet, will be refunded their LPs.</li>
                                  </ul>
                             </div>
                         </div>

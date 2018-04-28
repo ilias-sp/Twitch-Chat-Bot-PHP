@@ -22,7 +22,13 @@
                 <div class="col-xs-12">
                     <!-- all text from readme.md is pasted in here: START -->
 
-<div id="README_MD"></div>
+<div id="README_MD">
+<?php
+$help = file_get_contents('../../README.md');
+
+echo nl2br($help);
+?>
+</div>
 
                     
                     <!-- all text from readme.md is pasted in here: END -->

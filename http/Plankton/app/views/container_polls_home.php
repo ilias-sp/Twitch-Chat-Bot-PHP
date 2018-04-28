@@ -118,7 +118,7 @@
                             </h2>
                         </div>
                         <div class="body">
-                            <div class="alert alert-success">
+                            <div class="alert alert-success" style="line-height: 2em;">
                                 <ul>
                                  <li>To configure the poll commands, open with a text editor the conf/config.php file and check the "Polls config" section.</li>
                                  <li>Assuming the poll commands are set to their default values, to start the poll, any of the bot administrators can run: <br/>
