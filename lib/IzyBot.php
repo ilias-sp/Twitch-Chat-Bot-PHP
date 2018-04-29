@@ -612,6 +612,13 @@ class IzyBot {
                 $this->_bot_command_add_usage($this->bot_config['loyaltypoints_keyword']);
                 return TRUE;
             }
+            elseif ($words_in_message_text[0] === $this->bot_config['quote_keyword'])
+            {
+                $this->_display_quote($username, $channel, $words_in_message_text, $message_text);
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($this->bot_config['quote_keyword']);
+                return TRUE;
+            }
         }
         //
         // commands for admins END 
@@ -667,7 +674,7 @@ class IzyBot {
             $this->_bot_command_add_usage($this->bot_config['giveaway_join_keyword']);
             return TRUE;
         }
-        elseif ($message_text === $this->bot_config['quote_keyword'])
+        elseif ($words_in_message_text[0] === $this->bot_config['quote_keyword'])
         {
             $this->_display_quote($username, $channel, $words_in_message_text, $message_text);
             // add the bot command to usage:
@@ -1108,7 +1115,7 @@ class IzyBot {
             RETURN FALSE;
         }
         //
-        $next_id = count($this->quotes) + 1;
+        $next_id = max(array_column($this->quotes, "id")) + 1;
         $this->quotes[] = array( 'id' => $next_id,
             'text' => $quote_text
         );
@@ -1337,6 +1344,12 @@ class IzyBot {
             //
             if ($requested_quote_id === NULL)
             {
+                if (count($this->quotes) === 0)
+                {
+                    $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'No quotes provisioned to respond with.');
+                    GOTO ENDDISPLAYQUOTEQUOTE;
+                }
+
                 // select a random:
                 $key_id = array_rand($this->quotes, 1);
                 $quote_text = '#' . $this->quotes[$key_id]['id'] . ' - ' . $this->quotes[$key_id]['text'];
@@ -1356,7 +1369,7 @@ class IzyBot {
                 if ($key_id === NULL)
                 {
                     // quote not found:
-                    $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'quote not found for id: #' . $requested_quote_id);
+                    $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Quote not found for id: #' . $requested_quote_id);
                     GOTO ENDDISPLAYQUOTEQUOTE;
                 }
                 else
