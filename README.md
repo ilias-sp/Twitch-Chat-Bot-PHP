@@ -58,6 +58,8 @@ To access the Web interface, we will be using the PHP built-in web server. To st
 
 To access the Web interface of the Bot, open this link with your browser: [http://127.0.0.1:33333/](http://127.0.0.1:33333/)
 
+To start **both** the IzyBot and the Web interface, use the batch file: `startIzyBot_and_HTTP_GUI.bat`.
+
 
 # SAMPLE PREVIEW PICS FROM THE WEB INTERFACE
 
