@@ -205,7 +205,7 @@ class IzyBot {
         $this->loyalty_check_last_date_done = date('U');
         $this->loyalty_viewers_XP_file = 'loyalty_viewers_XP_array.cfg';
 
-        if ($this->bot_config['loyalty_points_per_interval'] > 0)
+        if ($this->loyalty_points_per_interval > 0)
         {
             $this->admin_commands_reserved_names[] = $config['loyaltypoints_keyword'];
             $this->loyalty_commands = array($config['loyaltypoints_keyword']
@@ -1939,7 +1939,7 @@ class IzyBot {
     private function _check_and_query_loyalty_URL()
     {
         if (date('U') - $this->loyalty_check_last_date_done > $this->loyalty_check_interval &&
-            count($this->loyalty_points_per_interval) > 0
+            $this->loyalty_points_per_interval > 0
             )
         {
             $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Time to query twitch URL for chatters currently active.');
@@ -2064,16 +2064,17 @@ class IzyBot {
         if ($key_for_username === FALSE)
         {
             // new username:
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $username . ' has 0 ' . $this->loyalty_currency . '.');
-            return TRUE;
+            $loyalty_XP = 0;
         }
         else
         {
             // username exists:
             $loyalty_XP = $this->loyalty_viewers_XP_array[$key_for_username]['points'];
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $username . ' has ' . $loyalty_XP . ' ' . $this->loyalty_currency . '.');
-            return TRUE;
         }
+        
+        $loyalty_currency_single_plural = ($loyalty_XP > 1 || $loyalty_XP === 0) ? $this->loyalty_currency . 's' : $this->loyalty_currency;
+
+        $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $username . ' has ' . $loyalty_XP . ' ' . $loyalty_currency_single_plural . '.');
         //
         return TRUE;
     }

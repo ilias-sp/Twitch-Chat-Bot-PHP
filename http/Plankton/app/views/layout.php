@@ -30,6 +30,12 @@ else if ($route === 'config_botquotes')
     render('container_botquotes', array('quotes' => $quotes ), false);
     render('footer', array(), false);
 }
+else if ($route === 'config_configfile')
+{
+    render('header', array('title' => $title), false);
+    render('container_configfile', array('configfile_details' => $configfile ), false);
+    render('footer', array(), false);
+}
 else if ($route === 'twitchchat')
 {
     render('header', array('title' => $title), false);

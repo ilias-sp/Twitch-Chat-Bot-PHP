@@ -44,6 +44,13 @@
             'quotes' => $app['model']->get_quotes()
         );
     },
+    '/config/configfile' => function($app) {
+        return array('configfile',
+            'title' => 'Config.php - Configuration',
+            'route' => 'config_configfile',
+            'configfile' => $app['model']->get_configfile()
+        );
+    },
     '/twitchchat' => function($app) {
         return array('twitchchat',
             'title' => 'Twitch Chat',

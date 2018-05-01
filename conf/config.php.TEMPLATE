@@ -94,5 +94,4 @@ $config['loyalty_points_per_interval'] = 0;
 $config['loyalty_currency'] = 'IzyEuro';
 $config['loyalty_check_interval'] = 120; // in seconds
 $config['loyalty_points_welcome_award'] = 1000; // amount of LP awarded to new viewers
-
 $config['loyaltypoints_keyword'] = '!izyeuros';

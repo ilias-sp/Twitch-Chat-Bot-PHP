@@ -128,6 +128,9 @@
                             <li>
                                 <a href="/config/quotes">Quotes</a>
                             </li>
+                            <li>
+                                <a href="/config/configfile">config.php file</a>
+                            </li>
                         </ul>
                     </li>
                     <li>
