@@ -236,14 +236,16 @@ class IzyBot {
         
         if (socket_connect($this->socket, $this->hostname, $this->port) === FALSE)
         {
-            $this->log_it('ERROR', __CLASS__, __FUNCTION__, 'Could not open socket: ' . $this->hostname . ', port: ' . $this->port);
+            $this->log_it('ERROR', __CLASS__, __FUNCTION__, 'Could not open connection to server: ' . $this->hostname . ', port: ' . $this->port);
             // $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Errno: ' . $errno . ', Errstr: ' . $errstr);
-            throw new \Exception('Could not open socket: ' . $this->hostname . ', port: ' . $this->port . ', error: ' . socket_last_error($this->socket));
+            echo __CLASS__ . ': Could not open connection to server: ' . $this->hostname . ', port: ' . $this->port . ', error: ' . socket_last_error($this->socket) . "\n";
+            throw new \Exception('Could not open connection to server: ' . $this->hostname . ', port: ' . $this->port . ', error: ' . socket_last_error($this->socket));
         }
         else
         {
             socket_set_nonblock($this->socket);
-            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Opened socket successfully to server: ' . $this->hostname . ', port: ' . $this->port . '.');
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Opened connection successfully to server: ' . $this->hostname . ', port: ' . $this->port . '.');
+            echo __CLASS__ . ': Opened connection successfully to server: ' . $this->hostname . ', port: ' . $this->port . '.' . "\n";
             return TRUE;
         }
     }
@@ -253,7 +255,8 @@ class IzyBot {
     private function _close_socket()
     {
         socket_close($this->socket);
-        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Socket closed.');
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Connection to server ' . $this->hostname . ' closed.');
+        echo __CLASS__ . ': Connection to server ' . $this->hostname . ' closed.' . "\n";
         //
         // unset($this->socket);
         //
@@ -323,7 +326,8 @@ class IzyBot {
 
                 if (socket_last_error($this->socket) === 104)
                 {
-                    $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Detected socket was closed, error=|' . socket_strerror(socket_last_error($this->socket)));
+                    echo __CLASS__ . ': Detected connection was closed, error=|' . socket_strerror(socket_last_error($this->socket)) . "\n";
+                    $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Detected connection was closed, error=|' . socket_strerror(socket_last_error($this->socket)));
                     goto ENDCONNECTION;
                 }
                 //---
@@ -363,6 +367,7 @@ class IzyBot {
             //
             ENDCONNECTION:
             $this->_close_socket();
+            echo __CLASS__ . ': Attempting to reconnect in 15 seconds..' . "\n";
             $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Attempting to reconnect in 15 seconds..');
             sleep(15);
             //  
@@ -761,7 +766,8 @@ class IzyBot {
         $this->send_text_to_server('service', 'CAP REQ :twitch.tv/commands');
         usleep(1000000);
         $this->send_text_to_server('service', 'JOIN ' . $this->channel);
-        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Login commands were sent. Bot is ready.');
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Login commands were sent. Bot is ready to serve commands.');
+        echo __CLASS__ . ': Login commands were sent. Bot is ready to serve commands.' . "\n";
         //
         return TRUE;
     }
