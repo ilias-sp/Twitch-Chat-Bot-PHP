@@ -90,7 +90,7 @@ $config['bet_accept_period_over_announcement_message'] = 'Bet period is over, no
 // loyalty config:
 // 
 // how many points a viewers is awarded per check interval. if you set it to 0, feature is disabled:
-$config['loyalty_points_per_interval'] = 10;
+$config['loyalty_points_per_interval'] = 0;
 $config['loyalty_currency'] = 'IzyEuro';
 $config['loyalty_check_interval'] = 120; // in seconds
 $config['loyalty_points_welcome_award'] = 1000; // amount of LP awarded to new viewers
