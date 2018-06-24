@@ -59,7 +59,7 @@ class IzyBot {
     // poll stuff:
     private $poll_question;
     private $active_poll_exists;
-    private $votes_array;
+    private $poll_votes_array;
     private $poll_deadline_timestamp;
     private $poll_duration;
 
@@ -145,6 +145,7 @@ class IzyBot {
                                                      $config['uptimecommand_keyword'],
                                                      $config['admin_makepoll_keyword'],
                                                      $config['admin_cancelpoll_keyword'],
+                                                     $config['admin_poll_getwinner'],
                                                      $config['admin_giveaway_start_keyword'],
                                                      $config['admin_giveaway_stop_keyword'],
                                                      $config['admin_giveaway_find_winner_keyword'],
@@ -186,7 +187,7 @@ class IzyBot {
 
         // poll stuff:
         $this->active_poll_exists = FALSE;
-        $this->votes_array = array();
+        $this->poll_votes_array = array();
         $this->poll_help_message = $config['poll_help_message'];
 
         // bets:
@@ -552,6 +553,27 @@ class IzyBot {
                     $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Attempted poll cancellation command is malformed, command: |' . $message_text . '| was ignored.');
                     return FALSE;
                 }
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_poll_getwinner'])
+            {
+                if (count($words_in_message_text) === 2)
+                {
+                    $this->_select_poll_winner($username, $channel, $words_in_message_text, $message_text);
+                    return TRUE;
+                }
+                else
+                {
+                    $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Attempted poll getwinner command is malformed, command: |' . $message_text . '| was ignored.');
+                    return FALSE;
+                }
+            }
+            elseif (mb_strtolower($words_in_message_text[0]) === mb_strtolower($this->bot_config['votecommand_keyword']) &&
+                $this->active_poll_exists === TRUE)
+            {
+                $this->_register_users_vote($username, $channel, $words_in_message_text, $message_text);
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($this->bot_config['votecommand_keyword']);
+                return TRUE;
             }
             elseif ($words_in_message_text[0] === $this->bot_config['admin_giveaway_status_keyword'])
             {
@@ -1493,7 +1515,7 @@ class IzyBot {
                 $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Poll command was valid and no poll already exists. Creating New poll..');
                 $this->active_poll_exists = TRUE;
                 $this->poll_question = implode(' ', array_slice($words_in_message_text, 2));
-                $this->votes_array = array();
+                $this->poll_votes_array = array();
                 $this->poll_deadline_timestamp = date('U') + $words_in_message_text[1];
 
                 $this->poll_duration = $words_in_message_text[1];
@@ -1530,7 +1552,7 @@ class IzyBot {
             // no need to write poll results to file..
 
             $this->poll_question = NULL;
-            $this->votes_array = array();
+            $this->poll_votes_array = array();
             $this->poll_deadline_timestamp = NULL;
 
             $this->poll_duration = NULL;
@@ -1538,6 +1560,59 @@ class IzyBot {
             $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Poll was cancelled.');
             return TRUE;
         }
+    }
+    //----------------------------------------------------------------------------------
+    //
+    //----------------------------------------------------------------------------------
+    private function _select_poll_winner($username, $channel, $words_in_message_text, $message_text)
+    {
+        if ($this->active_poll_exists == TRUE)
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'There is an active poll at the moment. Can\'t select a winner.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : The poll is still open for voting. You can select a winner after deadline has passed.');
+            return FALSE;
+        }
+        // check if there are votes in the array:
+        if ( count($this->poll_votes_array) == 0)
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'No votes are currently stored for latest poll to pick a winner from. Can\'t select a winner now.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : No votes are currently stored for latest poll to pick a winner from. Can\'t select a winner now.');
+            return FALSE;
+        }
+        // check value is numeric
+        if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) != 1)
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Poll winning option not integer. Aborting.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : To select a winner from the previous poll, please provide an integer that will be considered as the winning option.');
+            return FALSE;
+        }
+        $poll_winning_value = $words_in_message_text[1];
+        $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'selecting poll winner, winning option = ' . $poll_winning_value);
+        
+        $closest_vote_value = $this->_poll_find_closer_vote($poll_winning_value);
+        if ($closest_vote_value === FALSE)
+        {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Couldn\'t determine closest vote to the poll_winning_value = ' . $poll_winning_value );
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Could not detect the closest vote to the winning option of ' . $poll_winning_value . ' out of ' . count($this->poll_votes_array) . ' total votes of last\'s poll. Cannot select a winner.');
+            return FALSE;
+        }
+        $winner = $this->_poll_get_random_winner($closest_vote_value);
+
+        if ($winner[0] === TRUE) {
+            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Out of ' . count($winner[1]) . ' eligible for win votes, winner is: ' . $winner[2] );
+
+            $vote_single_plural = (count($winner[1]) == 1) ? 'viewer was' : 'viewers were';
+
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : Out of ' . count($this->poll_votes_array) . ' votes in last poll, ' . count($winner[1]) . ' ' . $vote_single_plural . ' found to have voted: "' . $closest_vote_value . '", which was the closest value to the selected winning option of: "' . $poll_winning_value . '". And the winner is ...');
+            sleep(1);
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : The winner is: @' . $winner[2] . '! Congrats!');
+        }
+        else
+        {
+            $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Could not pick a poll winner, _poll_get_random_winner() response: ' . "\n\n" . print_r($winner, true) . "\n\n" );
+        }
+        //
+        return TRUE;
     }
     //----------------------------------------------------------------------------------
     //
@@ -1552,11 +1627,11 @@ class IzyBot {
         else
         {
             if (preg_match('/^[0-9]+$/', $words_in_message_text[1], $matches) === 1 &&
-                strlen($words_in_message_text[1]) <= 5
+                strlen($words_in_message_text[1]) <= 10
                 )
             {
                 $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Vote command is accepted. Command: ' . $message_text);
-                $this->votes_array[$username] = $words_in_message_text[1];
+                $this->poll_votes_array[$username] = $words_in_message_text[1];
                 return TRUE;
             }
             else
@@ -1591,9 +1666,9 @@ class IzyBot {
             $this->active_poll_exists = FALSE;
             
             $poll_results = array();
-            $votes_count = count($this->votes_array);
+            $votes_count = count($this->poll_votes_array);
             //
-            foreach ($this->votes_array as $user => $vote)
+            foreach ($this->poll_votes_array as $user => $vote)
             {
                 if (isset($poll_results[$vote]))
                 {
@@ -1619,22 +1694,21 @@ class IzyBot {
                     
                     if ($current_row === 0)
                     {
-                        $results_text .= ' option ' . $poll_result . ': ' . $poll_count . ' ' . $vote_text . ' (' . intval((100*$poll_count)/$votes_count) . '%) ';
+                        $results_text .= ' option "' . $poll_result . '": ' . $poll_count . ' ' . $vote_text . ' (' . intval((100*$poll_count)/$votes_count) . '%) ';
                     }
                     else
                     {
-                        $results_text .= ', option ' . $poll_result . ': ' . $poll_count . ' ' . $vote_text . ' (' . intval((100*$poll_count)/$votes_count) . '%) ';
+                        $results_text .= ', option "' . $poll_result . '": ' . $poll_count . ' ' . $vote_text . ' (' . intval((100*$poll_count)/$votes_count) . '%) ';
                     }
                     $current_row++;
                 }
             }
             // write poll results to file:
             $this->_write_poll_results($poll_results, $results_text);
-            $this->poll_question = NULL;
-            $this->votes_array = array();
-            $this->poll_deadline_timestamp = NULL;
-
-            $this->poll_duration = NULL;
+            // $this->poll_question = NULL;
+            // $this->poll_votes_array = array();
+            // $this->poll_deadline_timestamp = NULL;
+            // $this->poll_duration = NULL;
             //
             $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['poll_closure_announcement_message'] . ' The results are: ' . $results_text);
         }
@@ -1650,12 +1724,12 @@ class IzyBot {
         //
         // $text_to_file = "Poll description: " . $this->poll_question . "\n\n" . 
         // "Poll result: " . $results_text . "\n\n" . 
-        // "Votes: " . "\n\n" . json_encode($this->votes_array) . "\n\n";        
+        // "Votes: " . "\n\n" . json_encode($this->poll_votes_array) . "\n\n";        
         //
 
         $poll_results_array = array( 'Poll description' => $this->poll_question,
             'Poll result' => $results_text,
-            'Votes' => $this->votes_array
+            'Votes' => $this->poll_votes_array
         );
 
         $this->appdatahandler->WriteAppDatafile($poll_results_file, 'polls', json_encode($poll_results_array), 'WRITE');
@@ -2383,9 +2457,47 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    
+    private function _poll_find_closer_vote($poll_winning_value)
+    {
+        $closest_value = FALSE;
+
+        foreach ($this->poll_votes_array as $vote_viewer => $vote_value) {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, ' checking row: ' . $vote_viewer . ' => ' . $vote_value);    
+            if ($closest_value === FALSE || abs($poll_winning_value - $closest_value) > abs($vote_value - $poll_winning_value)) {
+                $closest_value = $vote_value;
+            }
+        }
+        //
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, ' The closest value found to: ' . $poll_winning_value . ', was found to be: ' . $closest_value);
+        return $closest_value;
+    }
     //----------------------------------------------------------------------------------
     // 
+    //----------------------------------------------------------------------------------
+    private function _poll_get_random_winner($poll_winning_value)
+    {
+        $poll_eligible_votes_for_winner = array();
+
+        foreach ($this->poll_votes_array as $vote_viewer => $vote_value) {
+            if ($vote_value == $poll_winning_value) {
+                $poll_eligible_votes_for_winner[] = $vote_viewer;
+            }
+        }
+
+        if (count($poll_eligible_votes_for_winner) > 0) {
+            $random_key = array_rand($poll_eligible_votes_for_winner, 1);
+            $winner = $poll_eligible_votes_for_winner[$random_key];
+            //
+            return array(TRUE, $poll_eligible_votes_for_winner, $winner);
+        }
+        else
+        {
+            return array(FALSE, FALSE, FALSE);
+        }
+        
+    }
+    //----------------------------------------------------------------------------------
+    //
     //----------------------------------------------------------------------------------
 
 }

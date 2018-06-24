@@ -68,11 +68,12 @@ $config['bot_name'] = 'IzyBot';
 // Polls config:
 // 
 $config['poll_help_message'] = '<poll\'s duration in minutes> <free text describing the poll>';
-$config['admin_makepoll_keyword'] = '!makepoll';
-$config['admin_cancelpoll_keyword'] = '!cancelpoll';
+$config['admin_makepoll_keyword'] = '!poll-start';
+$config['admin_cancelpoll_keyword'] = '!poll-cancel';
 $config['votecommand_keyword'] = '!vote';
 $config['new_poll_announcement_message'] = 'New poll is running';
 $config['poll_closure_announcement_message'] = 'Poll was closed.';
+$config['admin_poll_getwinner'] = '!poll-winner';
 
 
 // Bets config:
