@@ -102,7 +102,7 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 
 | Command | Purpose |
 | ----------------------- | ----------------------- |
-| !poll-start &lt;poll duration&gt; &lt;poll description&gt; | Used to create a new poll. Command syntax is expected to be: !makepoll &lt;poll duration in seconds&gt; &lt;free text describing the poll and the available options to vote (options need to be numeric and less than 5 digits, meaning up to 99999)&gt; |
+| !poll-start &lt;poll duration&gt; &lt;poll description&gt; | Used to create a new poll. Command syntax is expected to be: !makepoll &lt;poll duration in seconds&gt; &lt;free text describing the poll and the available options to vote (options need to be numeric and less or up to 10 digits, meaning up to 9999999999 number)&gt; |
 | !poll-cancel | Used to cancel the active poll. |
 | !poll-winner &lt;winning value&gt; | Used in case you want to have the bot select a winner from the poll participants. Izybot will identify the list of viewers who voted a value as close to the "winning value", and select a random viewer from that list. |
 
