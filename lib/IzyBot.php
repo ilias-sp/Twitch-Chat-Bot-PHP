@@ -1710,6 +1710,8 @@ class IzyBot {
             // $this->poll_deadline_timestamp = NULL;
             // $this->poll_duration = NULL;
             //
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['poll_closure_announcement_message'] . ' The poll is now closed, no more votes will be accepted. ' . count($this->poll_votes_array) . ' votes were collected.');
+            // this line may not be printed if too many results (if text too long):
             $this->send_text_to_server('bot', 'PRIVMSG ' . $this->channel . ' : ' . $this->bot_config['poll_closure_announcement_message'] . ' The results are: ' . $results_text);
         }
         //
