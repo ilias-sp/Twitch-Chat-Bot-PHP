@@ -1418,6 +1418,15 @@ class IzyBot {
     private function _display_botinfo_command($username, $channel, $words_in_message_text, $message_text)
     {
         $message = $this->bot_name . ' is free and can be found at: https://github.com/ilias-sp/Twitch-Chat-Bot-PHP';
+
+        if (file_exists('VERSION.md')) {
+            
+            $version_file_contents = file_get_contents('VERSION.md');
+
+            $version_info = explode('=', $version_file_contents);
+
+            $message .= ' . Version: ' . $version_info[1] . '.';
+        }
         //
         if ($this->_check_response_should_be_silenced($this->bot_config['botinfocommand_keyword']) === FALSE)
         {
