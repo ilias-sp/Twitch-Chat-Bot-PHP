@@ -9,6 +9,7 @@ This is Izybot! A simple, yet powerful, Twitch Chat bot written in PHP, to help 
 | ----------------------- |
 | **Runs locally on your PC**, making you completely independent of 3rd party websites/software etc. Requires only PHP installed on your PC. |
 | **Bot commands** management via Twitch Chat. Bot commands are special keywords users type in chat, that Izybot has to reply with the respective admin's configured response. |
+| **Twitch API commands**, The bot is capable of interacting with Twitch API v5, which allows it to change the Channel's title, Channel's game etc. |
 | **Periodic messages** initiated by the bot. Can be used to promote streamer's social media etc. |
 | **Quotes**. |
 | **Polls**. Create polls for the viewers and the bot will collect their votes. |
@@ -37,8 +38,9 @@ On the other hand, Bot was not written to be performing Moderator tasks, at leas
 1. Go to the `conf` directory and copy the `config.php.TEMPLATE` file to a new file called: `config.php`.
 2. Edit that file and fill in the information required. edit the fields according to the instructions.
 3. Repeat with the `channel_credentials.php.TEMPLATE` file: copy it to `channel_credentials.php` and fill in your channel,username and oath token (obtained from the `https://twitchapps.com/tmi/` site)
+4. If you plan to use the Twitch API v5 capabilities, please check the additional instructions mentioned [here](documentation/Using_Twitch_API.md).
 
-4. Streamers with PHP knowledge who want to implement commands that include PHP code for maximum flexibility, can use the `conf/admin_commands_nonsafe.cfg.TEMPLATE` file. Copy this file to `appdata/admin_commands_nonsafe.cfg` and manually add commands that include PHP code (i.e. nonsafe), for producing dynamic output. As a security measure, PHP enabled commands can't be added via Twitch Chat like other regular admin commands.
+5. Streamers with PHP knowledge who want to implement commands that include PHP code for maximum flexibility, can use the `conf/admin_commands_nonsafe.cfg.TEMPLATE` file. Copy this file to `appdata/admin_commands_nonsafe.cfg` and manually add commands that include PHP code (i.e. nonsafe), for producing dynamic output. As a security measure, PHP enabled commands can't be added via Twitch Chat like other regular admin commands.
 
 
 # STARTING THE BOT
@@ -83,6 +85,14 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 | !addcmd | used to add a new command. the command will be available to all. |
 | !editcmd | used to update the response of an existing command. |
 | !removecmd | used to remove an existing command. |
+
+- Twitch API v5 commands (to enable these commands, additional configuration is needed, please check [here](documentation/Using_Twitch_API.md)):
+
+| Command | Purpose |
+| ----------------------- | ----------------------- |
+| !title | Change the Channel's title |
+| !game | Change the Channel's game |
+| !issub | Check if a user is subscribed to your channel (this command will only work if you are running the bot using your Channel's account) |
 
 - Bot's administrators management:
 

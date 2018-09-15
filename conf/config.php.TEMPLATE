@@ -26,17 +26,24 @@ $config['uptimecommand_keyword'] = '!uptime';
 $config['reply_format'] = 3;
 
 
+// Twitch Oauth token scope: read more at: https://dev.twitch.tv/docs/authentication/#scopes
+$config['oath_token_scope'] = 'chat_login+channel_editor+channel_check_subscription';
+
+
 // periodic messages config:
 $config['admin_addperiodicmsg_keyword'] = '!addperiodicmsg';
 $config['admin_removeperiodicmsg_keyword'] = '!removeperiodicmsg';
 
+
 // to enable the feature, set the threshold to a value greater than 0 seconds:
 $config['periodic_messages_interval_seconds'] = 60;
+
 
 // quotes config:
 $config['admin_addquote_keyword'] = '!addquote';
 $config['admin_removequote_keyword'] = '!removequote';
 $config['quote_keyword'] = '!quote';
+
 
 // giveaways config:
 // for Admins:
@@ -50,6 +57,7 @@ $config['admin_giveaway_reset_keyword'] = '!giveaway-reset';
 // for viewers to join:
 $config['giveaway_join_keyword'] = '!giveaway';
 
+
 // if you want to suppress Bot responses to same commands for a few seconds, 
 // set the desired thresh in seconds. If you want to disable this feature, set the value to 0 seconds.
 $config['duplicate_message_cuttoff_seconds'] = 20;
@@ -59,6 +67,7 @@ $config['duplicate_message_cuttoff_seconds'] = 20;
 // just how to name the log files
 $config['log_file_prefix'] = 'IzyBot';
 $config['log_file_prefix_IRC'] = 'IzyBot_IRC';
+$config['log_file_prefix_TwitchAPI'] = 'IzyBot_TwitchAPI';
 
 
 // The name that you want the bot to identify itself in your Twitch Chat.
@@ -96,3 +105,10 @@ $config['loyalty_currency'] = 'IzyEuro';
 $config['loyalty_check_interval'] = 120; // in seconds
 $config['loyalty_points_welcome_award'] = 1000; // amount of LP awarded to new viewers
 $config['loyaltypoints_keyword'] = '!izyeuros';
+
+
+// twitch API related commands:
+$config['admin_twitchapi_set_stream_title'] = '!title';
+$config['admin_twitchapi_set_stream_game'] = '!game';
+$config['admin_twitchapi_is_user_a_sub'] = '!issub';
+
