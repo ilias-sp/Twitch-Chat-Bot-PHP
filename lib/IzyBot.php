@@ -5,7 +5,7 @@ namespace IZYBOT\lib;
 use \DateTime;
 // use IZYBOT\lib\AppDataHandler as AppDataHandler;
 
-define('APPVERSION', '3.0.1');
+define('APPVERSION', '3.0.2');
 
 
 
@@ -188,6 +188,8 @@ class IzyBot {
                                                      $config['admin_twitchapi_set_stream_title'],
                                                      $config['admin_twitchapi_set_stream_game'],
                                                      $config['admin_twitchapi_is_user_a_sub'],
+                                                     $config['admin_addvip_command'],
+                                                     $config['admin_removevip_command'],
                                                      $this->bot_config['botinfocommand_keyword']
         );
         
@@ -788,6 +790,20 @@ class IzyBot {
                 $this->_check_user_is_sub($words_in_message_text, $channel, $message_text);
                 // add the bot command to usage:
                 $this->_bot_command_add_usage($this->bot_config['admin_twitchapi_is_user_a_sub']);
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_addvip_command'])
+            {
+                $this->_vip_add_user($words_in_message_text, $channel, $message_text);
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($this->bot_config['admin_addvip_command']);
+                return TRUE;
+            }
+            elseif ($words_in_message_text[0] === $this->bot_config['admin_removevip_command'])
+            {
+                $this->_vip_remove_user($words_in_message_text, $channel, $message_text);
+                // add the bot command to usage:
+                $this->_bot_command_add_usage($this->bot_config['admin_removevip_command']);
                 return TRUE;
             }
         }
@@ -2772,6 +2788,44 @@ class IzyBot {
 
         }
 
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _vip_add_user($words_in_message_text, $channel, $message_text)
+    {
+        if (count($words_in_message_text) == 2)
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Adding user: ' . $words_in_message_text[1] . ' to VIPs.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " :/vip " . $words_in_message_text[1]);
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : Add VIP command was sent.");
+        }
+        else
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Add VIP user command is malformed (expect 1 word, the username). Ignoring it.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : VIP command ignored, need to pass only one username.");
+        }
+        // 
+        return TRUE;
+    }
+    //----------------------------------------------------------------------------------
+    // 
+    //----------------------------------------------------------------------------------
+    private function _vip_remove_user($words_in_message_text, $channel, $message_text)
+    {
+        if (count($words_in_message_text) == 2)
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Removing user: ' . $words_in_message_text[1] . ' from VIPs.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " :/unvip " . $words_in_message_text[1]);
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : Remove VIP command was sent.");
+        }
+        else
+        {
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Remove VIP user command is malformed (expect 1 word, the username). Ignoring it.');
+            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : VIP command ignored, need to pass only one username.");
+        }
+        // 
         return TRUE;
     }
     //----------------------------------------------------------------------------------

@@ -141,6 +141,13 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 | !endbet &lt;winning option&gt; | End the active bet. Provide also the winning option for the bot to award the viewers who bet on that option, and deduct the amount from the viewers who lost. |
 | !cancelbet | Cancel the ongoing bet, refund the viewers who had already placed a bet. |
 
+- VIPs:
+
+| Command | Purpose |
+| ----------------------- | ----------------------- |
+| !addvip &lt;username&gt; | Add the username to the channel's VIP list. |
+| !removevip &lt;username&gt; | Remove the username to the channel's VIP list. |
+**NOTE:** Twitch requires that the account running the bot to have unlocked the feature to execute the above VIP management commands.
 
 # USER COMMANDS
 

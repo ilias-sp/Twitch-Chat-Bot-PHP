@@ -112,3 +112,6 @@ $config['admin_twitchapi_set_stream_title'] = '!title';
 $config['admin_twitchapi_set_stream_game'] = '!game';
 $config['admin_twitchapi_is_user_a_sub'] = '!issub';
 
+// twitch VIP commands:
+$config['admin_addvip_command'] = '!addvip';
+$config['admin_removevip_command'] = '!removevip';
