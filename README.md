@@ -147,11 +147,11 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 | ----------------------- | ----------------------- |
 | !addvip &lt;username&gt; | Add the username to the channel's VIP list. |
 | !removevip &lt;username&gt; | Remove the username to the channel's VIP list. |
-**NOTE:** Twitch requires that the account running the bot to have unlocked the feature to execute the above VIP management commands.
+| **NOTE:** Twitch requires that the account running the bot to have unlocked the feature to execute the above VIP management commands. | |
 
 # USER COMMANDS
 
-- Special reserved commands that are already configured:
+- Reserved commands that are already configured:
 
 | Command | Purpose |
 | ----------------------- | ----------------------- |
