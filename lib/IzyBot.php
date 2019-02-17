@@ -5,7 +5,7 @@ namespace IZYBOT\lib;
 use \DateTime;
 // use IZYBOT\lib\AppDataHandler as AppDataHandler;
 
-define('APPVERSION', '3.0.3');
+define('APPVERSION', '3.0.4');
 
 
 
@@ -2221,6 +2221,10 @@ class IzyBot {
             //-----
             $viewers_in_json = array();
 
+            if (isset($json_response['chatters']['vips']))
+            {
+                $viewers_in_json = array_merge($viewers_in_json, $json_response['chatters']['vips']);
+            }
             if (isset($json_response['chatters']['moderators']))
             {
                 $viewers_in_json = array_merge($viewers_in_json, $json_response['chatters']['moderators']);
