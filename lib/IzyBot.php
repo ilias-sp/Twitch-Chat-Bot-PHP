@@ -5,7 +5,7 @@ namespace IZYBOT\lib;
 use \DateTime;
 // use IZYBOT\lib\AppDataHandler as AppDataHandler;
 
-define('APPVERSION', '3.0.4');
+define('APPVERSION', '3.0.5');
 
 
 
@@ -847,7 +847,7 @@ class IzyBot {
             $this->_bot_command_add_usage($this->bot_config['loyaltypoints_keyword']);
             return TRUE;
         }
-        elseif ($message_text === $this->bot_config['bet_place_keyword'])
+        elseif ($words_in_message_text[0] === $this->bot_config['bet_place_keyword'])
         {
             $this->_register_bet($username, $channel, $words_in_message_text, $message_text);
             // add the bot command to usage:
