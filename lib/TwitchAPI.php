@@ -43,7 +43,7 @@ class Twitchapi {
 
         $this->twitchapi_channel_data_file = 'twitch_channel_data.cfg';
 
-        if ( strlen($this->bot_config['app_client_id']) > 0 && strlen($this->bot_config['app_client_secret']) > 0) {
+        if ( strlen($this->bot_config['app_client_id']) > 0 && strlen($this->bot_config['app_client_secret']) > 0 && strlen($this->bot_config['oath_twitchAPI_token']) > 0) {
 
             // $this->_read_twitch_api_oath_token();
             $this->module_enabled = TRUE;
@@ -51,7 +51,7 @@ class Twitchapi {
         }
         else {
 
-            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'TwitchAPI module is disabled, Twitch App Client ID or Client Secret is empty.');
+            $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'TwitchAPI module is disabled, Twitch App Client ID or Client Secret or TwitchAPI oath token is empty.');
             // $this->oath_token = NULL;
             $this->module_enabled = FALSE;
 

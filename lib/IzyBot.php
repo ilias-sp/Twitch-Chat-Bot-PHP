@@ -5,7 +5,7 @@ namespace IZYBOT\lib;
 use \DateTime;
 // use IZYBOT\lib\AppDataHandler as AppDataHandler;
 
-define('APPVERSION', '4.0.0');
+define('APPVERSION', '4.0.1');
 
 
 
