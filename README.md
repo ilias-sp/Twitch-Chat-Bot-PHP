@@ -267,3 +267,8 @@ IzyBot uses below 3rd party open source software:
 | [KLogger](https://github.com/katzgrau/KLogger) |
 | [AdminBSB - Material Design Dashboard](https://github.com/gurayyarar/AdminBSBMaterialDesign) |
 | [Plankton, a PHP pico framework](https://github.com/Gregwar/Plankton) |
+
+
+## CHANGE LOG
+
+Changes per commit, can be found at the [Change Log](documentation/ChangeLog.md) page.

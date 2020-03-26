@@ -202,7 +202,7 @@ class Twitchapi {
         // 
         $url = 'https://api.twitch.tv/kraken/channels/' . $this->channel_id;
 
-        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . mb_substr($this->bot_config['oath_pass'], 6) );
+        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . $this->bot_config['oath_twitchAPI_token'] );
 
         $payload = array( 'channel[status]' => $title
         );
@@ -230,7 +230,7 @@ class Twitchapi {
         // 
         $url = 'https://api.twitch.tv/kraken/channels/' . $this->channel_id;
 
-        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . mb_substr($this->bot_config['oath_pass'], 6) );
+        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . $this->bot_config['oath_twitchAPI_token'] );
 
         $payload = array( 'channel[game]' => $game
         );
@@ -258,7 +258,7 @@ class Twitchapi {
 
         $url = 'https://api.twitch.tv/kraken/channels/' . $this->channel_id . '/subscriptions/' . $user_id;
 
-        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . mb_substr($this->bot_config['oath_pass'], 6) );
+        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . $this->bot_config['oath_twitchAPI_token'] );
 
         $payload = NULL;
 

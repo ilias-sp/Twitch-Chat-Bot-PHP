@@ -5,7 +5,7 @@ namespace IZYBOT\lib;
 use \DateTime;
 // use IZYBOT\lib\AppDataHandler as AppDataHandler;
 
-define('APPVERSION', '3.0.6');
+define('APPVERSION', '4.0.0');
 
 
 
@@ -416,10 +416,10 @@ class IzyBot {
     private function _read_twitch_oath_token()
     {
         // if token is defined in the config file, use that one:
-        if (mb_strlen($this->bot_config['oath_pass']) > 0) {
+        if (mb_strlen($this->bot_config['oath_IRC_chat_pass']) > 0) {
 
             $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Using the Oauth token found in channel_credentials.php file.');
-            $this->oath_token = $this->bot_config['oath_pass'];
+            $this->oath_token = $this->bot_config['oath_IRC_chat_pass'];
             goto ENDOFPROCESSING;
 
         }
