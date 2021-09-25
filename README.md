@@ -86,14 +86,6 @@ Unless, you have defined otherwise in the `conf/config.php`, the bot supports th
 | !editcmd | used to update the response of an existing command. |
 | !removecmd | used to remove an existing command. |
 
-- Twitch API v5 commands (to enable these commands, additional configuration is needed, please check [here](documentation/Using_Twitch_API.md)):
-
-| Command | Purpose |
-| ----------------------- | ----------------------- |
-| !title | Change the Channel's title |
-| !game | Change the Channel's game |
-| !issub | Check if a user is subscribed to your channel (this command will only work if you are running the bot using your Channel's account) |
-
 - Bot's administrators management:
 
 | Command | Purpose |

@@ -5,7 +5,7 @@ namespace IZYBOT\lib;
 use \DateTime;
 // use IZYBOT\lib\AppDataHandler as AppDataHandler;
 
-define('APPVERSION', '4.0.2');
+define('APPVERSION', '4.0.3');
 
 
 
@@ -45,8 +45,8 @@ class IzyBot {
     private $oath_token_expiration_date;
     private $twitch_oath_token_data_file;
 
-    private $app_client_id;
-    private $app_client_secret;
+    // private $app_client_id;
+    // private $app_client_secret;
 
     // bot commands usage stats:
     private $bot_commands_usage;
@@ -131,7 +131,7 @@ class IzyBot {
 
         // classes:
         $this->appdatahandler = new AppDataHandler($this->bot_config, $this->logger);
-        $this->twitchapi = new Twitchapi($this->bot_config, $this->TwitchAPI_logger);
+        // $this->twitchapi = new Twitchapi($this->bot_config, $this->TwitchAPI_logger);
 
         // logging info:
         // $this->log_file = APPPATH . '/log/' . $config['log_file'] . '__' . date('Ymd_H_i') . '.txt';
@@ -143,8 +143,8 @@ class IzyBot {
         $this->channel = '#' . $config['channel'];
         $this->bot_name = $config['bot_name'];
 
-        $this->app_client_id = $this->bot_config['app_client_id'];
-        $this->app_client_secret = $this->bot_config['app_client_secret'];
+        // $this->app_client_id = $this->bot_config['app_client_id'];
+        // $this->app_client_secret = $this->bot_config['app_client_secret'];
 
         // disable below exception until twitch fix:
         
@@ -185,9 +185,6 @@ class IzyBot {
                                                      $config['admin_endbet_keyword'],
                                                      $config['admin_cancelbet_keyword'],
                                                      $config['bet_place_keyword'],
-                                                     $config['admin_twitchapi_set_stream_title'],
-                                                     $config['admin_twitchapi_set_stream_game'],
-                                                     $config['admin_twitchapi_is_user_a_sub'],
                                                      $config['admin_addvip_command'],
                                                      $config['admin_removevip_command'],
                                                      $this->bot_config['botinfocommand_keyword']
@@ -420,86 +417,18 @@ class IzyBot {
 
             $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Using the Oauth token found in channel_credentials.php file.');
             $this->oath_token = $this->bot_config['oath_IRC_chat_pass'];
-            goto ENDOFPROCESSING;
 
-        }
-        // 
-        $twitch_oath_token_text = $this->appdatahandler->ReadAppDatafile($this->twitch_oath_token_data_file, 'READ');
-
-        if ($twitch_oath_token_text[0] === TRUE)
-        {
-            $twitch_oath_token_array = json_decode($twitch_oath_token_text[2], true);
-            if (!is_array($twitch_oath_token_array))
-            {
-                
-                $this->logger->log_it('ERROR', __CLASS__, __FUNCTION__, 'Twitch API oath data file: ' . $this->twitch_oath_token_data_file . ' is malformed.');
-                $this->_get_new_twitch_oath_token();
-
-            }
-            else {
-
-                $this->oath_token_expiration_date = $twitch_oath_token_array[1];
-
-                if (date('U') < $this->oath_token_expiration_date) {
-
-                    $this->oath_token = $twitch_oath_token_array[0];
-
-                }
-                else {
-
-                    $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Twitch API oath token expired on: ' . date('d/m/Y, H:i:s', $this->oath_token_expiration_date) . ". Getting a new one..");
-                    $this->_get_new_twitch_oath_token();
-
-                }
-
-            }
         }
         else {
-            
-            $this->_get_new_twitch_oath_token();
-            
+
+            echo __CLASS__ . ": No token provided for accessing Twitch Chat. Variable: config['oath_IRC_chat_pass'] is missing. Exiting.. " . "\n";
+            throw new \Exception("No token provided for accessing Twitch Chat. Variable: config['oath_IRC_chat_pass'] is missing. Exiting..");
+
         }
+        
         ENDOFPROCESSING:
-        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Twitch API oath token loaded from file: ' . $this->oath_token . ", expires on: " . date('d/m/Y, H:i:s', $this->oath_token_expiration_date) . ".");
+        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Twitch API oath token loaded from file: ' . $this->oath_token . ".");
 
-    }
-    //----------------------------------------------------------------------------------
-    // 
-    //----------------------------------------------------------------------------------
-    private function _get_new_twitch_oath_token()
-    {
-        
-        // NOT WORKING! :()
-        
-        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Getting new oath token from Twitch API..');
-
-        $url = 'https://id.twitch.tv/oauth2/token?client_id=' . $this->app_client_id . '&client_secret=' . $this->app_client_secret . '&grant_type=client_credentials&scope=' . $this->bot_config['oath_token_scope'];
-
-        $api_call = $this->twitchapi->_run_twitch_api_call($url, 'POST', NULL, NULL, FALSE);
-
-        if (! isset($api_call[1]['http_code'])) {
-
-            echo __CLASS__ . ': API call to get oath token from Twitch API failed. Exiting.. ' . "\n";
-            throw new \Exception('API call to get oath token from Twitch API failed. Exiting..');
-
-        }
-        // 
-        if ($api_call[1]['http_code'] != 200) {
-
-            echo __CLASS__ . ': API call to get returned with error. Exiting.. ' . "\n";
-            throw new \Exception('API call to get returned with error. Exiting..');
-
-        }
-        // 
-        $json_response = json_decode($api_call[0]);
-
-        $this->oath_token = $json_response->access_token;
-        $this->oath_token_expiration_date = $json_response->expires_in + date('U');
-
-        $this->_write_oath_token_data();
-
-        return TRUE;
-        
     }
     //----------------------------------------------------------------------------------
     // 
@@ -771,27 +700,27 @@ class IzyBot {
                 $this->_bot_command_add_usage($this->bot_config['quote_keyword']);
                 return TRUE;
             }
-            elseif ($words_in_message_text[0] === $this->bot_config['admin_twitchapi_set_stream_title'])
-            {
-                $this->_set_stream_title($words_in_message_text, $channel, $message_text);
-                // add the bot command to usage:
-                $this->_bot_command_add_usage($this->bot_config['admin_twitchapi_set_stream_title']);
-                return TRUE;
-            }
-            elseif ($words_in_message_text[0] === $this->bot_config['admin_twitchapi_set_stream_game'])
-            {
-                $this->_set_stream_game($words_in_message_text, $channel, $message_text);
-                // add the bot command to usage:
-                $this->_bot_command_add_usage($this->bot_config['admin_twitchapi_set_stream_game']);
-                return TRUE;
-            }
-            elseif ($words_in_message_text[0] === $this->bot_config['admin_twitchapi_is_user_a_sub'])
-            {
-                $this->_check_user_is_sub($words_in_message_text, $channel, $message_text);
-                // add the bot command to usage:
-                $this->_bot_command_add_usage($this->bot_config['admin_twitchapi_is_user_a_sub']);
-                return TRUE;
-            }
+            // elseif ($words_in_message_text[0] === $this->bot_config['admin_twitchapi_set_stream_title'])
+            // {
+            //     $this->_set_stream_title($words_in_message_text, $channel, $message_text);
+            //     // add the bot command to usage:
+            //     $this->_bot_command_add_usage($this->bot_config['admin_twitchapi_set_stream_title']);
+            //     return TRUE;
+            // }
+            // elseif ($words_in_message_text[0] === $this->bot_config['admin_twitchapi_set_stream_game'])
+            // {
+            //     $this->_set_stream_game($words_in_message_text, $channel, $message_text);
+            //     // add the bot command to usage:
+            //     $this->_bot_command_add_usage($this->bot_config['admin_twitchapi_set_stream_game']);
+            //     return TRUE;
+            // }
+            // elseif ($words_in_message_text[0] === $this->bot_config['admin_twitchapi_is_user_a_sub'])
+            // {
+            //     $this->_check_user_is_sub($words_in_message_text, $channel, $message_text);
+            //     // add the bot command to usage:
+            //     $this->_bot_command_add_usage($this->bot_config['admin_twitchapi_is_user_a_sub']);
+            //     return TRUE;
+            // }
             elseif ($words_in_message_text[0] === $this->bot_config['admin_addvip_command'])
             {
                 $this->_vip_add_user($words_in_message_text, $channel, $message_text);
@@ -1169,14 +1098,14 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    private function _write_oath_token_data()
-    {
+    // private function _write_oath_token_data()
+    // {
 
-        $this->appdatahandler->WriteAppDatafile($this->twitch_oath_token_data_file, 'appdata', json_encode(array($this->oath_token, $this->oath_token_expiration_date)), 'WRITE');
+    //     $this->appdatahandler->WriteAppDatafile($this->twitch_oath_token_data_file, 'appdata', json_encode(array($this->oath_token, $this->oath_token_expiration_date)), 'WRITE');
 
-        return TRUE;
+    //     return TRUE;
 
-    }
+    // }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
@@ -2680,124 +2609,130 @@ class IzyBot {
     //----------------------------------------------------------------------------------
     //
     //----------------------------------------------------------------------------------
-    private function _set_stream_title($words_in_message_text, $channel, $message_text)
-    {
-        $title = implode(' ', array_slice($words_in_message_text, 1));
+    // Deprecated:
 
-        if ($title === '') {
+    // private function _set_stream_title($words_in_message_text, $channel, $message_text)
+    // {
+    //     $title = implode(' ', array_slice($words_in_message_text, 1));
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'No title specified.');
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : No title specified.');
-            return FALSE;
+    //     if ($title === '') {
 
-        }
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'No title specified.');
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : No title specified.');
+    //         return FALSE;
+
+    //     }
         
-        $api_call = $this->twitchapi->set_channel_title($title);
+    //     $api_call = $this->twitchapi->set_channel_title($title);
 
-        if (isset($api_call[2])) {
+    //     if (isset($api_call[2])) {
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Reponse: " . $api_call[2]);
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : " . $api_call[2]);
-            return TRUE;
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Reponse: " . $api_call[2]);
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : " . $api_call[2]);
+    //         return TRUE;
             
-        }        
-        // 
-        if ($api_call[1]['http_code'] === 200) {
+    //     }        
+    //     // 
+    //     if ($api_call[1]['http_code'] === 200) {
             
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's title update was successful.");
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : Stream's title was updated successfully.");
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's title update was successful.");
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : Stream's title was updated successfully.");
 
-        }
-        else {
+    //     }
+    //     else {
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's title update failed.");
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : An error occured while updating the stream's title.");
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's title update failed.");
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : An error occured while updating the stream's title.");
 
-        }
+    //     }
 
-        return TRUE;
-    }
+    //     return TRUE;
+    // }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    private function _set_stream_game($words_in_message_text, $channel, $message_text)
-    {
-        $game = implode(' ', array_slice($words_in_message_text, 1));
+    // Deprecated:
 
-        if ($game === '') {
+    // private function _set_stream_game($words_in_message_text, $channel, $message_text)
+    // {
+    //     $game = implode(' ', array_slice($words_in_message_text, 1));
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'No game specified.');
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : No game specified.');
-            return FALSE;
+    //     if ($game === '') {
 
-        }
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'No game specified.');
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' : No game specified.');
+    //         return FALSE;
+
+    //     }
         
-        $api_call = $this->twitchapi->set_channel_game($game);
+    //     $api_call = $this->twitchapi->set_channel_game($game);
 
-        if (isset($api_call[2])) {
+    //     if (isset($api_call[2])) {
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Reponse: " . $api_call[2]);
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : " . $api_call[2]);
-            return TRUE;
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Reponse: " . $api_call[2]);
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : " . $api_call[2]);
+    //         return TRUE;
             
-        }        
-        // 
-        if ($api_call[1]['http_code'] === 200) {
+    //     }        
+    //     // 
+    //     if ($api_call[1]['http_code'] === 200) {
             
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's game update was successful.");
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : Stream's game was updated successfully.");
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's game update was successful.");
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : Stream's game was updated successfully.");
 
-        }
-        else {
+    //     }
+    //     else {
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's game update failed.");
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : An error occured while updating the stream's game.");
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Channel's game update failed.");
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : An error occured while updating the stream's game.");
 
-        }
+    //     }
 
-        return TRUE;
-    }
+    //     return TRUE;
+    // }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    private function _check_user_is_sub($words_in_message_text, $channel, $message_text)
-    {
-        if (count($words_in_message_text) != 2) {
-            
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'No proper username passed.');
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' :  Username provided has invalid format.');
-            return FALSE;
-        }
+    // Deprecated:
 
-        $username = $words_in_message_text[1];
+    // private function _check_user_is_sub($words_in_message_text, $channel, $message_text)
+    // {
+    //     if (count($words_in_message_text) != 2) {
+            
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'No proper username passed.');
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . ' :  Username provided has invalid format.');
+    //         return FALSE;
+    //     }
+
+    //     $username = $words_in_message_text[1];
        
-        $api_call = $this->twitchapi->check_username_is_sub($username);
+    //     $api_call = $this->twitchapi->check_username_is_sub($username);
 
-        if (isset($api_call[2])) {
+    //     if (isset($api_call[2])) {
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Reponse: " . $api_call[2]);
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : " . $api_call[2]);
-            return TRUE;
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Reponse: " . $api_call[2]);
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : " . $api_call[2]);
+    //         return TRUE;
             
-        }        
-        // 
-        if ($api_call[0] === TRUE) {
+    //     }        
+    //     // 
+    //     if ($api_call[0] === TRUE) {
 
-            $user_sub_status = ($api_call[1] === 'is_sub') ? "is a subscriber" : "is not a subscriber";
+    //         $user_sub_status = ($api_call[1] === 'is_sub') ? "is a subscriber" : "is not a subscriber";
             
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Querying the API was successful, user: " . $username . " sub status = " . $user_sub_status );
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : User: " . $username . " " . $user_sub_status . ".");
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "Querying the API was successful, user: " . $username . " sub status = " . $user_sub_status );
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : User: " . $username . " " . $user_sub_status . ".");
 
-        }
-        else {
+    //     }
+    //     else {
 
-            $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "An error occured while querying the API.");
-            $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : An error occured while querying the API.");
+    //         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, "An error occured while querying the API.");
+    //         $this->send_text_to_server('bot', 'PRIVMSG ' . $channel . " : An error occured while querying the API.");
 
-        }
+    //     }
 
-        return TRUE;
-    }
+    //     return TRUE;
+    // }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------

@@ -43,7 +43,7 @@ class Twitchapi {
 
         $this->twitchapi_channel_data_file = 'twitch_channel_data.cfg';
 
-        if ( strlen($this->bot_config['app_client_id']) > 0 && strlen($this->bot_config['app_client_secret']) > 0 && strlen($this->bot_config['oath_twitchAPI_token']) > 0) {
+        if ( strlen($this->bot_config['app_client_id']) > 0 && strlen($this->bot_config['app_client_secret']) > 0 && strlen($this->bot_config['twitchAPI_access_token']) > 0) {
 
             // $this->_read_twitch_api_oath_token();
             $this->module_enabled = TRUE;
@@ -83,7 +83,7 @@ class Twitchapi {
             else {
 
                 $json_text = json_decode($channel_data_text_array[0]);
-                $this->channel_id = $json_text->users[0]->_id;
+                $this->channel_id = $json_text->data[0]->id;
 
             }
         }
@@ -112,10 +112,10 @@ class Twitchapi {
             curl_setopt($ch, CURLOPT_POST, 1);
 
         }
-        elseif ($access_method === 'PUT') {
+        elseif ($access_method === 'PUT' or $access_method === 'PATCH') {
             
             // curl_setopt($ch, CURLOPT_PUT, 1);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $access_method);
 
         }
 
@@ -127,7 +127,7 @@ class Twitchapi {
 
         if ($payload !== NULL) {
 
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($payload));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
 
         }
 
@@ -176,9 +176,9 @@ class Twitchapi {
 
         }
         // 
-        $url = 'https://api.twitch.tv/kraken/users?login=' . $username;
+        $url = 'https://api.twitch.tv/helix/users?login=' . $username;
 
-        $headers = array('Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Client-ID: ' . $this->app_client_id);
+        $headers = array('Client-ID: ' . $this->app_client_id, 'Authorization: Bearer ' . $this->bot_config['twitchAPI_access_token'] );
 
         $api_call = $this->_run_twitch_api_call($url, 'GET', $headers, NULL, FALSE);
 
@@ -191,8 +191,6 @@ class Twitchapi {
     public function set_channel_title($title)
     {
         
-        
-        
         if ($this->module_enabled === FALSE) {
             
             return array(FALSE, NULL, $this->response_module_not_enabled);
@@ -200,14 +198,14 @@ class Twitchapi {
 
         $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Setting Channels stream title via Twitch API..');
         // 
-        $url = 'https://api.twitch.tv/kraken/channels/' . $this->channel_id;
+        $url = 'https://api.twitch.tv/helix/channels?broadcaster_id=' . $this->channel_id;
 
-        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . $this->bot_config['oath_twitchAPI_token'] );
+        $headers = array('Client-ID: ' . $this->app_client_id, 'Authorization: Bearer ' . $this->bot_config['twitchAPI_access_token'], 'Content-Type: application/json' );
 
-        $payload = array( 'channel[status]' => $title
+        $payload = array( 'title' => $title
         );
 
-        $api_call = $this->_run_twitch_api_call($url, 'PUT', $headers, $payload, FALSE);
+        $api_call = $this->_run_twitch_api_call($url, 'PATCH', $headers, json_encode($payload), FALSE);
 
         $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Twitch API call result: ' . "\n\n" . print_r($api_call, true) . "\n\n");
 
@@ -217,31 +215,32 @@ class Twitchapi {
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
-    public function set_channel_game($game)
-    {
+    // public function set_channel_game($game)
+    // {
         
-        if ($this->module_enabled === FALSE) {
+    //     if ($this->module_enabled === FALSE) {
             
-            return array(FALSE, NULL, $this->response_module_not_enabled);
+    //         return array(FALSE, NULL, $this->response_module_not_enabled);
             
-        }
+    //     }
 
-        $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Setting Channels game via Twitch API..');
-        // 
-        $url = 'https://api.twitch.tv/kraken/channels/' . $this->channel_id;
+    //     $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Setting Channels game via Twitch API..');
+    //     // 
+    //     $url = 'https://api.twitch.tv/helix/channels?broadcaster_id=' . $this->channel_id;
 
-        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . $this->bot_config['oath_twitchAPI_token'] );
+    //     $headers = array('Client-ID: ' . $this->app_client_id, 'Authorization: Bearer ' . $this->bot_config['twitchAPI_access_token'], 'Content-Type: application/json' );
 
-        $payload = array( 'channel[game]' => $game
-        );
 
-        $api_call = $this->_run_twitch_api_call($url, 'PUT', $headers, $payload, FALSE);
+    //     $payload = array( 'game_id' => $game
+    //     );
 
-        $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Twitch API call result: ' . "\n\n" . print_r($api_call, true) . "\n\n");
+    //     $api_call = $this->_run_twitch_api_call($url, 'PUT', $headers, $payload, FALSE);
 
-        return $api_call;
+    //     $this->logger->log_it('DEBUG', __CLASS__, __FUNCTION__, 'Twitch API call result: ' . "\n\n" . print_r($api_call, true) . "\n\n");
 
-    }
+    //     return $api_call;
+
+    // }
     //----------------------------------------------------------------------------------
     // 
     //----------------------------------------------------------------------------------
@@ -256,9 +255,9 @@ class Twitchapi {
         // 
         $this->logger->log_it('INFO', __CLASS__, __FUNCTION__, 'Checking if a user is subscriber to the channel, via Twitch API..');
 
-        $url = 'https://api.twitch.tv/kraken/channels/' . $this->channel_id . '/subscriptions/' . $user_id;
+        $url = 'https://api.twitch.tv/helix/subscriptions/user?broadcaster_id=' . $this->channel_id . '&user_id=' . $user_id;
 
-        $headers = array('Client-ID: ' . $this->app_client_id, 'Accept: application/vnd.twitchtv.' . $this->twitch_api_version . '+json', 'Authorization: OAuth ' . $this->bot_config['oath_twitchAPI_token'] );
+        $headers = array('Client-ID: ' . $this->app_client_id, 'Authorization: Bearer ' . $this->bot_config['twitchAPI_access_token'] );
 
         $payload = NULL;
 
@@ -349,8 +348,8 @@ class Twitchapi {
         // 
         if ($api_call[1]['http_code'] != 200) {
 
-            echo __CLASS__ . ': API call to get returned with error. Exiting.. ' . "\n";
-            throw new \Exception('API call to get returned with error. Exiting..');
+            echo __CLASS__ . ': API call to get users id returned with error. Exiting.. ' . "\n";
+            throw new \Exception('API call to get users id returned with error. Exiting..');
 
         }
 
@@ -358,7 +357,7 @@ class Twitchapi {
 
         $json_text = json_decode($api_call[0]);
 
-        $this->channel_id = $json_text->users[0]->_id;
+        $this->channel_id = $json_text->data[0]->id;
 
         return $api_call;
 

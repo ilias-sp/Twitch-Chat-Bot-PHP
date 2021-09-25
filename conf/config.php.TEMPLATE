@@ -107,11 +107,6 @@ $config['loyalty_points_welcome_award'] = 1000; // amount of LP awarded to new v
 $config['loyaltypoints_keyword'] = '!izyeuros';
 
 
-// twitch API related commands:
-$config['admin_twitchapi_set_stream_title'] = '!title';
-$config['admin_twitchapi_set_stream_game'] = '!game';
-$config['admin_twitchapi_is_user_a_sub'] = '!issub';
-
 // twitch VIP commands:
 $config['admin_addvip_command'] = '!addvip';
 $config['admin_removevip_command'] = '!removevip';

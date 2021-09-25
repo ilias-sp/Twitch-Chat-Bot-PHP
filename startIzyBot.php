@@ -16,7 +16,6 @@ require_once(APPPATH . '/lib/Common.php');
 require_once(APPPATH . '/lib/Logger.php');
 require_once(APPPATH . '/lib/IzyBot.php');
 require_once(APPPATH . '/lib/AppDataHandler.php');
-require_once(APPPATH . '/lib/TwitchAPI.php');
 
 // require any potential plugins that reside on plugins folder:
 
